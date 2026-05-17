@@ -1,0 +1,112 @@
+<h2>设计方案总览</h2>
+<p class="subtitle">文件管理器 — 技术架构与组件设计</p>
+
+<div class="section">
+  <h3>架构图</h3>
+</div>
+
+<div class="mockup">
+  <div class="mockup-body" style="padding:20px; font-family:monospace; font-size:12px; line-height:1.8;">
+    <div style="text-align:center; color:var(--color-accent); margin-bottom:12px;">
+      ┌──────────────────────────────────────────┐<br>
+      │　　　　　　　　浏览器 (Browser) 　　　　　　　│<br>
+      │　┌────────────────────────────────────┐　│<br>
+      │　│　文件管理器页面 (useEverything hook) │　│<br>
+      │　│　· 搜索栏 · 目录树 · 文件列表 · 收藏  │　│<br>
+      │　└──────────────┬─────────────────────┘　│<br>
+      └────────────────┼────────────────────────┘<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ fetch()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+      <div style="text-align:center; color:#4da3ff; margin:8px 0;">
+      ┌──────────────────────────────────────────┐<br>
+      │　　Next.js API Routes (/api/everything)　 │<br>
+      │　　· GET  ?search= &amp;path= &amp;offset= &amp;sort= │<br>
+      │　　· GET  /download?filepath= (流式传输)   │<br>
+      │　　· GET  /drives (获取磁盘列表)            │<br>
+      └──────────────┬───────────────────────────┘<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ http.get()<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;▼<br>
+      <div style="text-align:center; color:#888; margin:8px 0;">
+      ┌──────────────────────────────────────────┐<br>
+      │　Everything HTTP Server (localhost:8080)  │<br>
+      │　/?search=...&amp;json=1  → JSON 搜索结果     │<br>
+      │　/?search=parent:"C:\path" → 目录浏览     │<br>
+      │　/C:/path/file.ext → 文件下载              │<br>
+      └──────────────────────────────────────────┘
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>组件树</h3>
+</div>
+
+<div class="mockup">
+  <div class="mockup-body" style="padding:16px; font-family:monospace; font-size:12px; line-height:1.8;">
+    <span style="color:var(--color-accent);">EverythingPage</span> (page.tsx)<br>
+    ├─ <span style="color:var(--color-accent);">SearchBar</span> — 搜索输入框 + 搜索语法提示<br>
+    ├─ <span style="color:#888;">布局容器</span><br>
+    │　├─ <span style="color:var(--color-accent);">Sidebar</span> — 左侧面板<br>
+    │　│　├─ <span style="color:var(--color-accent);">DriveList</span> — 磁盘列表 (C:\, D:\)<br>
+    │　│　├─ <span style="color:var(--color-accent);">Favorites</span> — 收藏夹 (localStorage)<br>
+    │　│　└─ <span style="color:var(--color-accent);">DirectoryTree</span> — 按需加载的目录树<br>
+    │　└─ <span style="color:#888;">主区域</span><br>
+    │　　├─ <span style="color:var(--color-accent);">PathBar</span> — 面包屑路径导航<br>
+    │　　├─ <span style="color:var(--color-accent);">ToolBar</span> — 排序切换 · 视图切换 · 结果统计<br>
+    │　　└─ <span style="color:var(--color-accent);">FileList</span> — 文件/文件夹列表<br>
+    │　　　　└─ <span style="color:var(--color-accent);">FileRow</span> × N — 单行（图标+名称+大小+日期+下载按钮）<br>
+    └─ <span style="color:var(--color-accent);">StatusBar</span> — 结果数量 · 用时 · 页码
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>数据流</h3>
+</div>
+
+<div class="mockup">
+  <div class="mockup-body" style="padding:16px; font-size:13px; line-height:1.7;">
+    <div style="margin-bottom:12px;">
+      <strong style="color:var(--color-accent);">1. 搜索流程</strong><br>
+      <span style="color:#888;">用户输入关键词 → useEverything 更新 search 状态 → debounce 300ms → GET /api/everything?search=... → 服务端转发 Everything HTTP → JSON 解析 → 更新 fileList 状态 → FileList 重渲染</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <strong style="color:var(--color-accent);">2. 目录浏览流程</strong><br>
+      <span style="color:#888;">点击文件夹 → setCurrentPath → GET /api/everything?path=C:\folder → 服务端拼接 parent:"C:\folder" 查询 → 返回子文件和子文件夹 → 更新列表 + 面包屑</span>
+    </div>
+    <div style="margin-bottom:12px;">
+      <strong style="color:var(--color-accent);">3. 下载流程</strong><br>
+      <span style="color:#888;">点击下载 → GET /api/everything/download?filepath=... → 服务端 stream Everything HTTP 文件 → 浏览器触发下载保存</span>
+    </div>
+    <div>
+      <strong style="color:var(--color-accent);">4. 收藏夹</strong><br>
+      <span style="color:#888;">纯客户端 localStorage，存储路径数组。点击收藏路径 → setCurrentPath → 触发目录浏览</span>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px;">
+  <h3>技术要点</h3>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>设计决策</h4>
+    <ul>
+      <li>Next.js API 路由代理 Everything HTTP，解决 CORS</li>
+      <li>环境变量 EVERYTHING_HTTP_URL 配置地址</li>
+      <li>useEverything hook 封装所有数据请求和状态</li>
+      <li>目录树节点按需加载（展开时才请求子目录）</li>
+      <li>FILETIME 日期在服务端转换为 ISO 8601</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>注意事项</h4>
+    <ul>
+      <li>大目录可能返回大量结果，需要分页</li>
+      <li>Everything HTTP 不支持直接"列目录"——用 parent: 查询模拟</li>
+      <li>路径中包含特殊字符时需 URL 编码</li>
+      <li>无文件预览（按你的选择跳过）</li>
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,232 @@
+@import "tailwindcss";
+
+@theme {
+  /* === Design System: Modern Dark (Cinema) × OLED Dark === */
+
+  /* Background hierarchy (darkest → lightest) */
+  --color-bg-deep: #020203;
+  --color-bg-base: #050506;
+  --color-bg-elevated: #0a0a0c;
+
+  /* Surface layers */
+  --color-surface: rgb(255 255 255 / 0.05);
+  --color-surface-hover: rgb(255 255 255 / 0.08);
+  --color-surface-active: rgb(255 255 255 / 0.12);
+
+  /* Text */
+  --color-foreground: #ededef;
+  --color-foreground-muted: #8a8f98;
+  --color-foreground-subtle: #5c5f66;
+
+  /* Semantic colors */
+  --color-accent: #5e6ad2;
+  --color-accent-glow: rgba(94 106 210 / 0.2);
+  --color-accent-hover: #7c86e0;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-destructive: #ef4444;
+
+  /* Border */
+  --color-border: rgba(255 255 255 / 0.08);
+  --color-border-hover: rgba(255 255 255 / 0.12);
+
+  /* Deprecated aliases (backward compat — remove after refactor) */
+  --color-bg-primary: var(--color-bg-deep);
+  --color-bg-card: var(--color-surface);
+  --color-border-card: var(--color-border);
+  --color-text-primary: var(--color-foreground);
+  --color-text-secondary: var(--color-foreground-muted);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Easing */
+  --easing-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Elevation shadows */
+  --elevation-low: 0 1px 2px rgba(0 0 0 / 0.3);
+  --elevation-medium: 0 4px 12px rgba(0 0 0 / 0.4);
+  --elevation-high: 0 8px 24px rgba(0 0 0 / 0.5);
+}
+
+/* Ambient light background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(94 106 210 / 0.15), transparent),
+    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(34 197 94 / 0.06), transparent),
+    radial-gradient(ellipse 50% 50% at 20% 80%, rgba(239 68 68 / 0.04), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 毛玻璃效果 */
+.glass {
+  background: var(--color-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--color-border);
+}
+
+/* Glass elevation variants */
+.glass-low {
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+}
+.glass-high {
+  background: var(--color-surface-active);
+  backdrop-filter: blur(32px);
+  border: 1px solid var(--color-border-hover);
+}
+
+/* 全局 */
+body {
+  background: var(--color-bg-deep);
+  color: var(--color-foreground);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 统一焦点环 */
+@utility focus-ring {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+*:focus-visible {
+  @apply focus-ring;
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.2);
+}
+
+/* 节拍器脉冲动画 — 单次播放 */
+@keyframes ping-once {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
+}
+@utility animate-ping-once {
+  animation: ping-once 0.35s ease-out forwards;
+}
+
+/* === Obsidian Lite — Markdown Preview === */
+.markdown-preview {
+  color: var(--color-foreground);
+  line-height: 1.75;
+  font-size: 0.9375rem;
+}
+.markdown-preview h1 { font-size: 1.75rem; font-weight: 700; margin: 1.5em 0 0.5em; }
+.markdown-preview h2 { font-size: 1.4rem; font-weight: 600; margin: 1.4em 0 0.5em; }
+.markdown-preview h3 { font-size: 1.15rem; font-weight: 600; margin: 1.2em 0 0.4em; }
+.markdown-preview h4 { font-size: 1rem; font-weight: 600; margin: 1em 0 0.3em; }
+.markdown-preview h5,
+.markdown-preview h6 { font-size: 0.9rem; font-weight: 600; margin: 0.8em 0 0.3em; }
+.markdown-preview p { margin: 0.6em 0; }
+.markdown-preview a { color: var(--color-accent); text-decoration: none; }
+.markdown-preview a:hover { text-decoration: underline; }
+.markdown-preview ul,
+.markdown-preview ol { padding-left: 1.5em; margin: 0.5em 0; }
+.markdown-preview ul { list-style: disc; }
+.markdown-preview ol { list-style: decimal; }
+.markdown-preview li { margin: 0.2em 0; }
+.markdown-preview li > ul,
+.markdown-preview li > ol { margin: 0; }
+.markdown-preview blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding: 0.3em 1em;
+  margin: 0.8em 0;
+  color: var(--color-foreground-muted);
+  background: rgb(255 255 255 / 0.03);
+  border-radius: 0 8px 8px 0;
+}
+.markdown-preview code {
+  background: rgb(255 255 255 / 0.08);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+.markdown-preview pre {
+  background: rgb(0 0 0 / 0.4);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  margin: 0.8em 0;
+}
+.markdown-preview pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.82em;
+  color: inherit;
+}
+.markdown-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.875rem;
+}
+.markdown-preview th,
+.markdown-preview td {
+  border: 1px solid rgb(255 255 255 / 0.1);
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+.markdown-preview th {
+  background: rgb(255 255 255 / 0.05);
+  font-weight: 600;
+}
+.markdown-preview img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.8em 0;
+}
+.markdown-preview input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  margin-right: 0.4em;
+  transform: translateY(1px);
+}
+.markdown-preview li:has(input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.5em;
+}
+.markdown-preview hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1.5em 0;
+}

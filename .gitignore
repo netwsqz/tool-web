@@ -1,0 +1,21 @@
+node_modules/
+.next/
+out/
+
+# User uploads / data
+public/uploads/
+data/
+
+# Environment
+.env*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
+
+# IDE
+.vscode/
+.idea/
