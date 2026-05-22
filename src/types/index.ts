@@ -60,3 +60,18 @@ export type {
   EverythingSortField,
   EverythingSearchParams,
 } from "./everything";
+
+export type {
+  P2PConnectionStatus,
+  P2PPeer,
+  P2PTransferItem,
+  P2PFileInfoMessage,
+  P2PFileCompleteMessage,
+  P2PFileCancelMessage,
+  P2PDataMessage,
+  P2PSignalingMessage,
+} from "./p2p";
+
+export type { TodoItem, TodoTag } from "./todo";
+
+export type { QRGeneratorType, WifiConfig, VCardConfig, QRGeneratorState, QRScannerState } from "./qr";
