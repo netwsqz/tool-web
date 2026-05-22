@@ -49,6 +49,15 @@ export const tools: ToolConfig[] = [
     status: "active",
     category: "media",
   },
+  {
+    id: "music-player",
+    name: "音乐播放器",
+    description: "本地播放器 · 黑胶唱片 · 频谱分析",
+    icon: "Disc3",
+    path: "/tools/music-player",
+    status: "active",
+    category: "media",
+  },
 
   // ── 创意工具 ──
   {
@@ -66,6 +75,16 @@ export const tools: ToolConfig[] = [
     description: "绘图板 · 局域网联机猜词",
     icon: "Palette",
     path: "/tools/draw-guess",
+    status: "active",
+    category: "creative",
+  },
+
+  {
+    id: "todo",
+    name: "待办清单",
+    description: "本地优先的待办事项管理 · 支持标签与优先级",
+    icon: "ListChecks",
+    path: "/tools/todo",
     status: "active",
     category: "creative",
   },
@@ -90,6 +109,15 @@ export const tools: ToolConfig[] = [
     category: "system",
   },
   {
+    id: "qr-code",
+    name: "二维码工具",
+    description: "生成二维码 · 图片扫码解码",
+    icon: "QrCode",
+    path: "/tools/qr-code",
+    status: "active",
+    category: "system",
+  },
+  {
     id: "group-chat",
     name: "群聊",
     description: "局域网多房间聊天 · 文件分享",
@@ -97,6 +125,15 @@ export const tools: ToolConfig[] = [
     path: "/tools/group-chat",
     status: "active",
     category: "system",
+  },
+  {
+    id: "p2p-transfer",
+    name: "P2P 快传",
+    description: "直连快传 · 不限大小 · 不走服务器",
+    icon: "ArrowLeftRight",
+    path: "/tools/p2p-transfer",
+    status: "active",
+    category: "file",
   },
   {
     id: "ai",
