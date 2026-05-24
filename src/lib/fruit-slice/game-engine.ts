@@ -1,6 +1,6 @@
 // src/lib/fruit-slice/game-engine.ts
 import type {
-  Fruit, Bomb, JuiceParticle, SlashPoint, ComboPopup,
+  Fruit, Bomb, HalfFruit, JuiceParticle, SlashPoint, ComboPopup,
   FruitSliceState, GamePhase, Point,
 } from "@/types/fruit-slice";
 import { FRUIT_COLORS } from "@/types/fruit-slice";
@@ -30,6 +30,7 @@ export interface EngineState {
   width: number;
   height: number;
   fruits: Fruit[];
+  halves: HalfFruit[];
   bombs: Bomb[];
   particles: JuiceParticle[];
   trail: SlashPoint[];
@@ -53,6 +54,7 @@ export function createInitialState(width: number, height: number): EngineState {
     width,
     height,
     fruits: [],
+    halves: [],
     bombs: [],
     particles: [],
     trail: [],
@@ -158,36 +160,40 @@ export function tick(state: EngineState, now: number, callbacks?: {
   // Physics - fruits
   for (const f of state.fruits) {
     if (!f.active) continue;
-    if (f.sliced) {
-      // Sliced halves drift apart and fall
-      f.vy += GRAVITY;
-      f.x += f.vx;
-      f.y += f.vy;
-      f.rotation += f.rotationSpeed;
-      if (f.y > state.height + 60) f.active = false;
-    } else {
-      f.vy += GRAVITY;
-      f.x += f.vx;
-      f.y += f.vy;
-      f.rotation += f.rotationSpeed;
-      // Missed fruit (went below screen unsliced)
-      if (f.y > state.height + 40) {
-        f.active = false;
-        state.lives -= MISS_PENALTY;
-        state.combo = 0;
-        callbacks?.onMiss?.();
-        if (state.lives <= 0) {
-          state.phase = "game-over";
-          if (state.score > state.bestScore) {
-            state.bestScore = state.score;
-            if (typeof localStorage !== "undefined") {
-              localStorage.setItem("fruit-slice-best-score", String(state.score));
-            }
+    f.vy += GRAVITY;
+    f.x += f.vx;
+    f.y += f.vy;
+    f.rotation += f.rotationSpeed;
+    // Missed fruit (went below screen unsliced)
+    if (f.y > state.height + 40) {
+      f.active = false;
+      state.lives -= MISS_PENALTY;
+      state.combo = 0;
+      callbacks?.onMiss?.();
+      if (state.lives <= 0) {
+        state.phase = "game-over";
+        if (state.score > state.bestScore) {
+          state.bestScore = state.score;
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("fruit-slice-best-score", String(state.score));
           }
-          callbacks?.onGameOver?.();
-          return;
         }
+        callbacks?.onGameOver?.();
+        return;
       }
+    }
+  }
+
+  // Physics - half fruits
+  for (let i = state.halves.length - 1; i >= 0; i--) {
+    const h = state.halves[i];
+    h.vy += GRAVITY;
+    h.x += h.vx;
+    h.y += h.vy;
+    h.rotation += h.rotationSpeed;
+    h.alpha -= 0.01;
+    if (h.y > state.height + 60 || h.alpha <= 0) {
+      state.halves.splice(i, 1);
     }
   }
 
@@ -207,10 +213,24 @@ export function tick(state: EngineState, now: number, callbacks?: {
   for (const f of slicedFruits) {
     const colors = FRUIT_COLORS[f.type];
     spawnJuice(state.particles, f.x, f.y, colors.flesh, 14);
-    // Create two half-fruit visuals by keeping the fruit and adding horizontal drift
-    f.vx = f.vx > 0 ? HALF_DRIFT : -HALF_DRIFT;
-    f.vy = -3;
-    f.rotationSpeed = (Math.random() - 0.5) * 0.2;
+    // Deactivate the whole fruit
+    f.active = false;
+    // Spawn two halves that drift apart
+    const baseVx = f.vx;
+    state.halves.push(
+      {
+        type: f.type, x: f.x, y: f.y,
+        vx: baseVx - HALF_DRIFT, vy: -3,
+        rotation: f.rotation, rotationSpeed: -0.15,
+        radius: f.radius, side: -1, alpha: 1,
+      },
+      {
+        type: f.type, x: f.x, y: f.y,
+        vx: baseVx + HALF_DRIFT, vy: -3,
+        rotation: f.rotation, rotationSpeed: 0.15,
+        radius: f.radius, side: 1, alpha: 1,
+      },
+    );
 
     // Combo
     if (now - state.lastSliceTime < COMBO_WINDOW) {

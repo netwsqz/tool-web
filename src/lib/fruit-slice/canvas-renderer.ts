@@ -20,25 +20,24 @@ export function renderFrame(
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 
-  // Draw fruits
+  // Draw whole fruits
   for (const f of state.fruits) {
     if (!f.active) continue;
     ctx.save();
     ctx.translate(f.x, f.y);
-
-    if (f.sliced) {
-      // Draw two halves drifting apart
-      drawFruitHalf(ctx, f.type, f.radius, -1, f.rotation);
-      ctx.restore();
-      ctx.save();
-      ctx.translate(f.x, f.y);
-      drawFruitHalf(ctx, f.type, f.radius, 1, f.rotation);
-    } else {
-      drawFruit(ctx, f.type, f.radius, f.rotation);
-    }
-
+    drawFruit(ctx, f.type, f.radius, f.rotation);
     ctx.restore();
   }
+
+  // Draw half fruits
+  for (const h of state.halves) {
+    ctx.save();
+    ctx.globalAlpha = h.alpha;
+    ctx.translate(h.x, h.y);
+    drawFruitHalf(ctx, h.type, h.radius, h.side, h.rotation);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 
   // Draw bombs
   for (const b of state.bombs) {
