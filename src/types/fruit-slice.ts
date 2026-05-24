@@ -75,6 +75,21 @@ export interface FruitSliceState {
   height: number;
 }
 
+/** A single half of a sliced fruit, drifting apart. */
+export interface HalfFruit {
+  type: FruitType;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  rotation: number;
+  rotationSpeed: number;
+  radius: number;
+  /** -1 = left half, 1 = right half */
+  side: -1 | 1;
+  alpha: number;
+}
+
 export const FRUIT_COLORS: Record<FruitType, { body: string; flesh: string; seeds: string }> = {
   watermelon: { body: "#2d6b2d", flesh: "#ff3b3b", seeds: "#1a1a1a" },
   orange:     { body: "#ff8c00", flesh: "#ffa500", seeds: "#fff5e0" },

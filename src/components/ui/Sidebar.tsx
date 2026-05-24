@@ -19,6 +19,7 @@ import {
   MessageCircle,
   Sparkles,
   QrCode,
+  Swords,
   Menu,
   X,
 } from "lucide-react";
@@ -41,6 +42,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Timer,
   MessageCircle,
   Sparkles,
+  Swords,
 };
 
 const categoryLabels: Record<string, string> = {
@@ -109,9 +111,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <Sparkles className="size-4 text-[var(--color-accent)]" />
         </div>
         <div>
-          <h1 className="text-sm font-semibold text-[var(--color-foreground)] leading-tight">
+          <h2 className="text-sm font-semibold text-[var(--color-foreground)] leading-tight">
             万能工具箱
-          </h1>
+          </h2>
           <p className="text-[11px] text-[var(--color-foreground-muted)]">
             本地工具集
           </p>

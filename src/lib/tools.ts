@@ -136,6 +136,15 @@ export const tools: ToolConfig[] = [
     category: "file",
   },
   {
+    id: "fruit-slice",
+    name: "水果忍者",
+    description: "切水果挑战 · 连击加分 · 避开炸弹",
+    icon: "Swords",
+    path: "/tools/fruit-slice",
+    status: "active",
+    category: "creative",
+  },
+  {
     id: "ai",
     name: "AI 工具",
     description: "智能助手 · 即将推出",
