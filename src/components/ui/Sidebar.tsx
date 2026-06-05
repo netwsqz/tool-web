@@ -106,15 +106,36 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav
-      className="flex flex-col h-full"
+      className="flex flex-col"
       style={{
-        background: "rgba(10,10,12,0.85)",
+        position: "fixed",
+        top: "12px",
+        left: "12px",
+        bottom: "12px",
+        width: "220px",
+        background: "rgba(10,10,12,0.65)",
         backdropFilter: "blur(32px) saturate(150%)",
         WebkitBackdropFilter: "blur(32px) saturate(150%)",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: "16px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset",
+        zIndex: 50,
       }}
       aria-label="工具导航"
     >
+      {/* Accent top highlight */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "20%",
+          right: "20%",
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, var(--color-accent), transparent)",
+          opacity: 0.4,
+        }}
+      />
+
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-[var(--color-border)]">
         <div className="size-8 rounded-lg bg-[var(--color-accent)]/15 flex items-center justify-center">

@@ -41,15 +41,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     cx.y += (tx.y - cx.y) * 0.05;
 
     if (typeof document !== "undefined") {
-      // Shift the primary glow hotspot with cursor
-      const baseX = 20 + (cx.x - 0.5) * 15;  // 12.5%–27.5%
-      const baseY = 10 + (cx.y - 0.5) * 10;   // 5%–15%
+      // Shift the primary glow hotspot with cursor — wide range for visible effect
+      const baseX = 15 + (cx.x - 0.5) * 40;  // -5%–35%
+      const baseY = 5 + (cx.y - 0.5) * 30;    // -10%–20%
       document.body.style.setProperty("--glow-x", `${baseX}%`);
       document.body.style.setProperty("--glow-y", `${baseY}%`);
 
-      // Secondary glow moves opposite
-      const secX = 80 - (cx.x - 0.5) * 10;
-      const secY = 80 - (cx.y - 0.5) * 10;
+      // Secondary glow moves opposite — trailing glow
+      const secX = 80 + (0.5 - cx.x) * 60;    // 20%–140%
+      const secY = 80 + (0.5 - cx.y) * 40;    // 40%–120%
       document.body.style.setProperty("--glow-sec-x", `${secX}%`);
       document.body.style.setProperty("--glow-sec-y", `${secY}%`);
     }
@@ -72,13 +72,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         璺冲埌涓昏鍐呭
       </a>
 
-      {/* Sidebar 鈥?handles its own mobile/desktop behavior */}
+      {/* Floating island sidebar */}
       <Sidebar />
 
-      {/* Main content */}
+      {/* Main content — full width since sidebar floats above */}
       <main
         id="main-content"
-        className="flex-1 min-w-0 relative z-10 pt-12 lg:pt-0"
+        className="flex-1 min-w-0 relative z-10 pt-12 lg:pl-20 lg:pt-0"
       >
         {children}
       </main>

@@ -58,9 +58,9 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at var(--glow-x, 20%) var(--glow-y, 10%), var(--color-accent-glow), transparent 60%),
-    radial-gradient(ellipse 50% 50% at var(--glow-sec-x, 80%) var(--glow-sec-y, 80%), color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 50%),
-    radial-gradient(ellipse 40% 40% at 20% 80%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 50%);
+    radial-gradient(ellipse 100% 70% at var(--glow-x, 20%) var(--glow-y, 10%), var(--color-accent-glow), transparent 60%),
+    radial-gradient(ellipse 70% 70% at var(--glow-sec-x, 80%) var(--glow-sec-y, 80%), color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 50%),
+    radial-gradient(ellipse 50% 50% at 20% 80%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
