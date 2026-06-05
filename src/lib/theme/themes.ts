@@ -36,6 +36,10 @@ export const THEMES: Record<Exclude<ThemeId, "custom">, ThemeVars> = {
   },
 };
 
+function isValidHex(hex: string): boolean {
+  return /^#[0-9a-fA-F]{6}$/.test(hex);
+}
+
 export function applyThemeVars(vars: ThemeVars) {
   const root = document.documentElement;
   root.style.setProperty("--color-accent", vars.accent);
@@ -45,6 +49,7 @@ export function applyThemeVars(vars: ThemeVars) {
 }
 
 export function deriveGlowFromAccent(hex: string): string {
+  if (!isValidHex(hex)) return "rgba(94,106,210,0.18)"; // fallback to blue
   // Convert hex to rgba with 0.18 alpha for glow
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -53,6 +58,7 @@ export function deriveGlowFromAccent(hex: string): string {
 }
 
 export function lightenHex(hex: string, amount = 30): string {
+  if (!isValidHex(hex)) return "#7c86e0"; // fallback to blue hover
   const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
   const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
   const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);

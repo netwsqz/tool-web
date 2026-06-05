@@ -9,7 +9,7 @@
   --color-bg-elevated: #0a0a0c;
 
   /* Surface layers */
-  --color-surface: rgb(255 255 255 / 0.05);
+  --color-surface: rgb(255 255 255 / 0.035);
   --color-surface-hover: rgb(255 255 255 / 0.08);
   --color-surface-active: rgb(255 255 255 / 0.12);
 
@@ -52,15 +52,27 @@
   --elevation-high: 0 8px 24px rgba(0 0 0 / 0.5);
 }
 
-/* Ambient light background */
+/* Ambient accent glow — shifts with theme + cursor position */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(94 106 210 / 0.15), transparent),
-    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(34 197 94 / 0.06), transparent),
-    radial-gradient(ellipse 50% 50% at 20% 80%, rgba(239 68 68 / 0.04), transparent);
+    radial-gradient(ellipse 80% 50% at var(--glow-x, 20%) var(--glow-y, 10%), var(--color-accent-glow), transparent 60%),
+    radial-gradient(ellipse 50% 50% at var(--glow-sec-x, 80%) var(--glow-sec-y, 80%), color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 50%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Noise grain texture for glass depth */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.025;
   pointer-events: none;
   z-index: 0;
 }
@@ -100,6 +112,17 @@ body {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* 主题切换过渡 - only on theme-aware elements, not svg or static decor */
+body, body * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease;
+}
+
+/* Exclude elements that shouldn't transition (performance + visual artifacts) */
+body svg, body img, body video, body canvas {
+  transition: none !important;
+}
+
 *:focus-visible {
   @apply focus-ring;
 }
@@ -141,6 +164,42 @@ body {
 }
 @utility animate-ping-once {
   animation: ping-once 0.35s ease-out forwards;
+}
+
+/* === Music Player — Warm Analog animations === */
+
+/* Slow vinyl spin */
+@utility animate-spin-slow {
+  animation: spin-slow 6s linear infinite;
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* Warm glow pulse behind vinyl disc */
+@keyframes amp-glow-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1.2); }
+  50% { opacity: 0.4; transform: scale(1.25); }
+}
+
+/* Light sweep reflection across vinyl */
+@keyframes amp-light-sweep {
+  0% { transform: rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  40% { opacity: 0; }
+  100% { transform: rotate(360deg); opacity: 0; }
+}
+
+/* Equalizer bar dance */
+@keyframes amp-eq-bar {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(2); }
+}
+
+/* Pulse ring around play button */
+@keyframes amp-pulse-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.3); opacity: 0; }
 }
 
 /* === Obsidian Lite — Markdown Preview === */

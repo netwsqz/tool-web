@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { tools } from "@/lib/tools";
 import type { ToolConfig } from "@/types";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Upload,
@@ -104,7 +105,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   }, []);
 
   return (
-    <nav className="flex flex-col h-full" aria-label="工具导航">
+    <nav
+      className="flex flex-col h-full"
+      style={{
+        background: "rgba(10,10,12,0.85)",
+        backdropFilter: "blur(32px) saturate(150%)",
+        WebkitBackdropFilter: "blur(32px) saturate(150%)",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
+      }}
+      aria-label="工具导航"
+    >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-[var(--color-border)]">
         <div className="size-8 rounded-lg bg-[var(--color-accent)]/15 flex items-center justify-center">
@@ -138,6 +148,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Theme Switcher at bottom */}
+      <div className="shrink-0 px-3 pb-4 pt-2 border-t" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+        <ThemeSwitcher />
       </div>
     </nav>
   );

@@ -76,4 +76,5 @@ export type { TodoItem, TodoTag } from "./todo";
 
 export type { QRGeneratorType, WifiConfig, VCardConfig, QRGeneratorState, QRScannerState } from "./qr";
 
-export type { FruitType, Fruit, Bomb, JuiceParticle, SlashPoint, ComboPopup, GamePhase, FruitSliceState } from "./fruit-slice";
+export type { FruitType, Point, Fruit, Bomb, JuiceParticle, SlashPoint, ComboPopup, GamePhase, FruitSliceState } from "./fruit-slice";
+export type { ThemeId, ThemeVars } from "../lib/theme/themes";

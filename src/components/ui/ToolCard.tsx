@@ -1,95 +1,90 @@
+"use client";
+
 import Link from "next/link";
-import {
-  Upload,
-  FolderOpen,
-  Clapperboard,
-  Download,
-  Disc3,
-  Music,
-  Piano,
-  FileText,
-  Palette,
-  Monitor,
-  Timer,
-  MessageCircle,
-  ArrowLeftRight,
-  Sparkles,
-  ListChecks,
-  QrCode,
-  Swords,
-} from "lucide-react";
 import type { ToolConfig } from "@/types";
-import { GlassPanel } from "./GlassPanel";
+import { iconMap } from "./iconMap";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Upload,
-  FolderOpen,
-  Clapperboard,
-  Download,
-  Disc3,
-  Music,
-  Piano,
-  FileText,
-  Palette,
-  Monitor,
-  Timer,
-  MessageCircle,
-  ArrowLeftRight,
-  Sparkles,
-  ListChecks,
-  QrCode,
-  Swords,
-};
-
-export function ToolCard({ tool }: { tool: ToolConfig }) {
+export default function ToolCard({
+  tool,
+  index = 0,
+}: {
+  tool: ToolConfig;
+  index?: number;
+}) {
   const isActive = tool.status === "active";
-  const Icon = tool.icon ? iconMap[tool.icon] : null;
+  const Icon = iconMap[tool.icon];
 
-  const card = (
-    <GlassPanel
-      className={`relative overflow-hidden transition-all duration-300 h-full
-        ${isActive
-          ? "group hover:scale-[1.02] hover:bg-white/8 hover:[animation:border-glow_2.5s_ease-in-out_infinite] cursor-pointer"
-          : "opacity-40 cursor-default"
-        }`}
+  return (
+    <Link
+      href={isActive ? `/tools/${tool.id}` : "#"}
+      className={`block group ${isActive ? "" : "pointer-events-none"}`}
+      tabIndex={isActive ? 0 : -1}
     >
-      {/* Hover glow */}
-      {isActive && (
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <div className="absolute -top-12 -right-12 size-32 bg-[var(--color-accent)]/8 rounded-full blur-[40px]" />
-          <div className="absolute -bottom-12 -left-12 size-24 bg-[var(--color-accent)]/5 rounded-full blur-[30px]" />
-        </div>
-      )}
-      {/* Icon */}
-      <div className="size-10 rounded-xl bg-[var(--color-accent)]/10 flex items-center justify-center mb-3
-        group-hover:bg-[var(--color-accent)]/20 transition-colors duration-200">
-        {Icon && <Icon className="size-5 text-[var(--color-accent)]" />}
-      </div>
-
-      <h3 className="text-base font-medium text-[var(--color-foreground)] mb-1">
-        {tool.name}
-      </h3>
-      <p className="text-sm text-[var(--color-foreground-muted)] leading-relaxed">
-        {tool.description}
-      </p>
-
-      <div className="mt-3">
-        <span
-          className={`text-xs px-2 py-0.5 rounded-full
-            ${isActive
-              ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
-              : "bg-white/5 text-[var(--color-foreground-muted)]"
+      <div
+        className={`rounded-3xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isActive
+            ? "cursor-pointer motion-safe:hover:scale-[1.02] motion-safe:hover:shadow-lg"
+            : "opacity-40 cursor-default"
+        }`}
+        style={{
+          background: "var(--color-surface)",
+          backdropFilter: "blur(24px) saturate(150%)",
+          WebkitBackdropFilter: "blur(24px) saturate(150%)",
+          border: "1px solid var(--color-border)",
+          position: "relative",
+          overflow: "hidden",
+          padding: "20px",
+        }}
+      >
+        {/* Hover glow overlay */}
+        <div
+          className="absolute inset-0 rounded-[1.75rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 0%, var(--color-accent-glow), transparent 70%)",
+          }}
+        />
+        <div className="flex items-start gap-4 relative z-[1]">
+          <div
+            className={`shrink-0 w-11 h-11 flex items-center justify-center rounded-[14px] transition-transform duration-300 ${
+              isActive ? "motion-safe:group-hover:scale-105" : ""
             }`}
-        >
-          {isActive ? "使用中" : "敬请期待"}
-        </span>
+            style={
+              isActive
+                ? {
+                    background: "var(--color-accent-grad)",
+                    boxShadow: "0 4px 12px var(--color-accent-glow)",
+                  }
+                : undefined
+            }
+          >
+            {Icon && (
+              <Icon
+                className={`w-5 h-5 ${isActive ? "text-white" : ""}`}
+                style={
+                  !isActive
+                    ? { color: "var(--color-foreground-muted)" }
+                    : undefined
+                }
+              />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3
+              className="font-semibold text-[15px] truncate"
+              style={{ color: "var(--color-foreground)" }}
+            >
+              {tool.name}
+            </h3>
+            <p
+              className="text-sm mt-1 line-clamp-2"
+              style={{ color: "var(--color-foreground-muted)" }}
+            >
+              {tool.description}
+            </p>
+          </div>
+        </div>
       </div>
-    </GlassPanel>
+    </Link>
   );
-
-  if (isActive && tool.path) {
-    return <Link href={tool.path} prefetch={true}>{card}</Link>;
-  }
-
-  return card;
 }

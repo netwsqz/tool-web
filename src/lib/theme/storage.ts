@@ -3,10 +3,13 @@ import type { ThemeId } from "./themes";
 
 const PREF_KEY = "theme-pref";
 const ACCENT_KEY = "theme-accent";
+const VALID_IDS: ThemeId[] = ["blue", "amber", "emerald", "rose", "custom"];
 
 export function loadThemePref(): ThemeId {
   if (typeof window === "undefined") return "blue";
-  return (localStorage.getItem(PREF_KEY) as ThemeId) || "blue";
+  const raw = localStorage.getItem(PREF_KEY);
+  if (raw && VALID_IDS.includes(raw as ThemeId)) return raw as ThemeId;
+  return "blue";
 }
 
 export function saveThemePref(id: ThemeId) {
@@ -20,4 +23,8 @@ export function loadCustomAccent(): string | null {
 
 export function saveCustomAccent(hex: string) {
   localStorage.setItem(ACCENT_KEY, hex);
+}
+
+export function removeCustomAccent() {
+  localStorage.removeItem(ACCENT_KEY);
 }

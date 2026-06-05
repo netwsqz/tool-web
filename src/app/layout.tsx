@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { AppShell } from "@/components/ui/AppShell";
+import { ThemeProvider } from "@/contexts/ThemeProvider";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "万能工具箱",
@@ -20,8 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className={`min-h-screen ${inter.variable}`}>
-        <AppShell>{children}</AppShell>
+      <body className={"min-h-screen"}>
+        <ThemeProvider>
+          <AppShell>{children}</AppShell>
+        </ThemeProvider>
       </body>
     </html>
   );

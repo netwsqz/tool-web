@@ -1,173 +1,230 @@
-import {
-  Upload,
-  FolderOpen,
-  Clapperboard,
-  Download,
-  Music,
-  FileText,
-  Palette,
-  Monitor,
-  Timer,
-  MessageCircle,
-  Sparkles,
-} from "lucide-react";
+"use client";
+
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { tools } from "@/lib/tools";
-import { ToolCard } from "@/components/ui/ToolCard";
-import type { ToolConfig } from "@/types";
+import ToolCard from "@/components/ui/ToolCard";
+import { ToolLayout } from "@/components/ui/ToolLayout";
+import { GlassPanel } from "@/components/ui/GlassPanel";
+import { iconMap, categoryMap, categoryLabels, type CategoryKey } from "@/components/ui/iconMap";
 
-/* ─── Category config ─── */
+const categories = [
+  {
+    key: "file",
+    title: "文件工具",
+    tools: tools.filter(
+      (t) =>
+        t.category === "file" ||
+        ["file-transfer", "everything-files"].includes(t.id)
+    ),
+  },
+  {
+    key: "media",
+    title: "媒体工具",
+    tools: tools.filter(
+      (t) =>
+        t.category === "media" ||
+        ["bilibili-download", "media", "music-player"].includes(t.id)
+    ),
+  },
+  {
+    key: "creative",
+    title: "创意工具",
+    tools: tools.filter(
+      (t) =>
+        t.category === "creative" ||
+        ["draw-guess", "piano", "metronome", "fruit-slice", "qr-code"].includes(t.id)
+    ),
+  },
+  {
+    key: "system",
+    title: "系统工具",
+    tools: tools.filter(
+      (t) =>
+        t.category === "system" ||
+        ["system", "obsidian", "todo", "group-chat", "p2p-transfer"].includes(t.id)
+    ),
+  },
+];
 
-type CategoryMeta = {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
+function HomePageContent() {
+  const searchParams = useSearchParams();
+  const filter = searchParams.get("filter");
+  const search = searchParams.get("q")?.toLowerCase();
 
-const categoryMeta: Record<string, CategoryMeta> = {
-  file: { label: "文件工具", icon: FolderOpen },
-  media: { label: "媒体工具", icon: Clapperboard },
-  creative: { label: "创意工具", icon: Palette },
-  system: { label: "系统工具", icon: Monitor },
-};
+  const filteredTools = search
+    ? tools.filter(
+        (t) =>
+          t.name.toLowerCase().includes(search) ||
+          t.description.toLowerCase().includes(search)
+      )
+    : filter
+      ? tools.filter((t) => t.category === filter)
+      : tools;
 
-/* ─── Stats ─── */
-
-function StatsBar() {
-  const activeCount = tools.filter((t) => t.status === "active").length;
-  const catCount = Object.keys(categoryMeta).length;
+  const activeTools = tools.filter((t) => t.status === "active");
+  const inactiveTools = tools.filter((t) => t.status !== "active");
+  const HeroIcon = iconMap["toolbox"];
 
   return (
-    <div className="flex items-center gap-6 text-sm text-[var(--color-foreground-muted)]">
-      <span className="flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-[var(--color-accent)]" />
-        {activeCount} 个工具
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="size-1.5 rounded-full bg-[var(--color-success)]" />
-        {catCount} 个分类
-      </span>
-    </div>
-  );
-}
-
-/* ─── Hero ─── */
-
-function HeroSection() {
-  return (
-    <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-bg-elevated)] to-[var(--color-bg-deep)] border border-[var(--color-border)] p-6 md:p-12 mb-6 md:mb-10">
-      {/* Ambient glow */}
-      <div className="absolute -top-20 -right-20 size-64 bg-[var(--color-accent)]/8 rounded-full blur-[80px]" />
-      <div className="absolute -bottom-20 -left-20 size-48 bg-[var(--color-accent)]/5 rounded-full blur-[60px]" />
-
-      <div className="relative">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="size-10 rounded-xl bg-[var(--color-accent)]/15 flex items-center justify-center">
-            <Sparkles className="size-5 text-[var(--color-accent)]" />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-[var(--color-foreground)] to-[var(--color-accent)] bg-clip-text text-transparent">
+    <ToolLayout
+      title=""
+      description=""
+      maxWidth="6xl"
+      padding="p-0"
+      hideBackLink
+    >
+      <div className="space-y-12">
+        {/* ═══ Hero — Liquid Glass 面板 ═══ */}
+        <div
+          className="relative overflow-hidden rounded-3xl p-10 md:p-14 text-center animate-fade-in"
+          style={{
+            background: "var(--color-surface)",
+            backdropFilter: "blur(24px) saturate(150%)",
+            WebkitBackdropFilter: "blur(24px) saturate(150%)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          {/* Decorative gradient blobs */}
+          <div
+            className="absolute -top-32 -right-32 w-80 h-80 rounded-full opacity-20"
+            style={{
+              background: "var(--color-accent-grad)",
+              filter: "blur(80px)",
+            }}
+          />
+          <div
+            className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full opacity-10"
+            style={{
+              background: "var(--color-accent-grad)",
+              filter: "blur(60px)",
+            }}
+          />
+          <div className="relative z-10">
+            <div
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
+              style={{
+                background: "var(--color-accent-grad)",
+                boxShadow: "0 8px 24px var(--color-accent-glow)",
+              }}
+            >
+              {HeroIcon ? <HeroIcon className="w-8 h-8 text-white" /> : null}
+            </div>
+            <h1
+              className="text-3xl md:text-4xl font-bold mb-3"
+              style={{ color: "var(--color-foreground)" }}
+            >
               万能工具箱
-            </span>
-          </h1>
+            </h1>
+            <p
+              className="text-base max-w-md mx-auto"
+              style={{ color: "var(--color-foreground-muted)" }}
+            >
+              本地优先的个人工具集合，轻量、快速、私密
+            </p>
+          </div>
         </div>
-        <p className="text-[var(--color-foreground-muted)] mb-4 max-w-lg">
-          本地优先的个人工具箱 — 无需注册，无需联网，所有工具即开即用。
-          持续扩展，完全掌控。
-        </p>
-        <StatsBar />
+
+        {/* ═══ 搜索结果 ═══ */}
+        {search && (
+          <section className="animate-fade-in">
+            <h2
+              className="text-lg font-semibold mb-4 px-1"
+              style={{ color: "var(--color-foreground)" }}
+            >
+              搜索结果 ({filteredTools.length})
+            </h2>
+            {filteredTools.length === 0 ? (
+              <GlassPanel animate>
+                <p style={{ color: "var(--color-foreground-muted)" }}>
+                  没有找到匹配的工具
+                </p>
+              </GlassPanel>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredTools.map((tool) => (
+                  <div key={tool.id} className="tool-card">
+                    <ToolCard tool={tool} index={0} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ═══ 分类展示 ═══ */}
+        {!search &&
+          categories.map((cat, ci) => {
+            const catTools = cat.tools.filter(
+              (t) => t.status === "active" && activeTools.includes(t)
+            );
+            if (catTools.length === 0) return null;
+            const CatIcon = categoryMap[cat.key as CategoryKey];
+            return (
+              <section
+                key={cat.key}
+                className="animate-fade-in"
+                style={{ animationDelay: `${ci * 0.08}s` }}
+              >
+                <h2
+                  className="flex items-center gap-2 text-lg font-semibold mb-4 px-1"
+                  style={{ color: "var(--color-foreground)" }}
+                >
+                  {CatIcon && (
+                    <CatIcon
+                      className="w-5 h-5"
+                      style={{ color: "var(--color-accent)" }}
+                    />
+                  )}
+                  {cat.title}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {catTools.map((tool) => (
+                    <div key={tool.id} className="tool-card">
+                      <ToolCard tool={tool} index={ci} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+
+        {/* ═══ 开发中 ═══ */}
+        {inactiveTools.length > 0 && !search && (
+          <section className="animate-fade-in">
+            <h2
+              className="flex items-center gap-2 text-lg font-semibold mb-4 px-1"
+              style={{ color: "var(--color-foreground-muted)" }}
+            >
+              {(() => {
+                const HammerIcon = iconMap["hammer"];
+                return HammerIcon ? (
+                  <HammerIcon
+                    className="w-5 h-5"
+                    style={{ color: "var(--color-foreground-subtle)" }}
+                  />
+                ) : null;
+              })()}
+              开发中
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {inactiveTools.map((tool) => (
+                <div key={tool.id} className="tool-card">
+                  <ToolCard tool={tool} index={0} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
-    </section>
+    </ToolLayout>
   );
 }
-
-/* ─── Featured tools ─── */
-
-const featuredIds = new Set(["everything-files", "media", "obsidian"]);
-const featured = tools.filter((t) => featuredIds.has(t.id) && t.status === "active");
-const other = tools.filter((t) => !featuredIds.has(t.id));
-
-/* ─── Category section ─── */
-
-function CategorySection({
-  category,
-  tools,
-}: {
-  category: string;
-  tools: ToolConfig[];
-}) {
-  const meta = categoryMeta[category];
-  if (!tools.length) return null;
-
-  return (
-    <section className="mb-10">
-      <div className="flex items-center gap-2 mb-4">
-        {meta?.icon && <meta.icon className="size-4 text-[var(--color-foreground-muted)]" />}
-        <h2 className="text-sm font-semibold text-[var(--color-foreground-muted)]">
-          {meta?.label ?? category}
-        </h2>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tools.map((tool) => (
-          <ToolCard key={tool.id} tool={tool} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ─── Page ─── */
 
 export default function HomePage() {
-  // Group non-featured tools by category
-  const byCategory: Record<string, ToolConfig[]> = {};
-  for (const tool of other) {
-    if (tool.status !== "active") continue;
-    (byCategory[tool.category] ??= []).push(tool);
-  }
-
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 md:py-12">
-      <HeroSection />
-
-      {/* Featured tools — 2x1 row */}
-      <section className="mb-10">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="size-4 text-[var(--color-accent)]" />
-          <h2 className="text-sm font-semibold text-[var(--color-foreground-muted)]">
-            精选工具
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {featured.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-      </section>
-
-      {/* Category sections */}
-      {Object.entries(byCategory).map(([cat, catTools]) => (
-        <CategorySection key={cat} category={cat} tools={catTools} />
-      ))}
-
-      {/* Coming soon */}
-      <section className="mb-10">
-        <h2 className="text-sm font-semibold text-[var(--color-foreground-muted)] mb-4">
-          即将推出
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tools
-            .filter((t) => t.status === "coming-soon")
-            .map((tool) => (
-              <ToolCard key={tool.id} tool={tool} />
-            ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-[var(--color-border)] pt-6 mt-12">
-        <p className="text-xs text-[var(--color-foreground-subtle)] text-center">
-          万能工具箱 · 本地工具集 · 持续扩展
-        </p>
-      </footer>
-    </div>
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <HomePageContent />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { THEMES, applyThemeVars, deriveGlowFromAccent, lightenHex, buildAccentGrad, type ThemeId, type ThemeVars } from "@/lib/theme/themes";
-import { loadThemePref, saveThemePref, loadCustomAccent, saveCustomAccent } from "@/lib/theme/storage";
+import { loadThemePref, saveThemePref, loadCustomAccent, saveCustomAccent, removeCustomAccent } from "@/lib/theme/storage";
 
 type ThemeContextValue = {
   themeId: ThemeId;
@@ -74,6 +74,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeId("blue");
     setCustomAccentState(null);
     saveThemePref("blue");
+    removeCustomAccent();
   }, []);
 
   return (
