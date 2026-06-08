@@ -13,10 +13,10 @@ export function renderFrame(
   // Clear
   ctx.clearRect(0, 0, width, height);
 
-  // Background gradient
+  // Background gradient — light sky
   const bg = ctx.createLinearGradient(0, 0, 0, height);
-  bg.addColorStop(0, "#0a0a1a");
-  bg.addColorStop(1, "#1a0a2e");
+  bg.addColorStop(0, "#e8f4fd");
+  bg.addColorStop(1, "#dceef8");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, width, height);
 

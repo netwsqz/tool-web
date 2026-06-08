@@ -91,12 +91,12 @@ export function drawTrail(ctx: CanvasRenderingContext2D, trail: SlashPoint[]) {
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y);
     ctx.lineTo(p1.x, p1.y);
-    ctx.strokeStyle = `rgba(255, 220, 180, ${alpha * 0.9})`;
+    ctx.strokeStyle = `rgba(255, 160, 50, ${alpha * 0.9})`;
     ctx.lineWidth = 3 * alpha + 1;
     ctx.stroke();
 
     // Glow
-    ctx.strokeStyle = `rgba(255, 200, 100, ${alpha * 0.3})`;
+    ctx.strokeStyle = `rgba(255, 140, 0, ${alpha * 0.4})`;
     ctx.lineWidth = 8 * alpha + 2;
     ctx.stroke();
   }
@@ -139,9 +139,9 @@ export function drawCombos(ctx: CanvasRenderingContext2D, popups: ComboPopup[]) 
     ctx.textBaseline = "middle";
 
     // Glow
-    ctx.shadowColor = "#ff8800";
+    ctx.shadowColor = "#FF6B00";
     ctx.shadowBlur = 12;
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = "#1C1C1E";
     ctx.fillText(p.text, p.x, p.y);
     ctx.shadowBlur = 0;
   }

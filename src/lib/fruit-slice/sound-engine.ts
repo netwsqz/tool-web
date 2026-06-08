@@ -97,3 +97,10 @@ export function vibrate(ms: number = 30) {
     navigator.vibrate(ms);
   }
 }
+
+/** Suspend AudioContext when leaving the page */
+export function suspendAudio() {
+  if (audioCtx && audioCtx.state === "running") {
+    audioCtx.suspend();
+  }
+}

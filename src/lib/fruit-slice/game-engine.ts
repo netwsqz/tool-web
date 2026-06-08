@@ -7,16 +7,18 @@ import { FRUIT_COLORS } from "@/types/fruit-slice";
 import { randomFruitType } from "./entities";
 import { spawnJuice, updateParticles, spawnCombo, updateCombos } from "./particles";
 
-const GRAVITY = 0.28;
-const FRUIT_RADIUS = 28;
-const BOMB_RADIUS = 24;
-const SPAWN_INTERVAL = 900; // ms between spawns
+// Physics constants — all in pixels/second units
+const GRAVITY = 700;          // px/s² — pulls fruits down
+const FRUIT_RADIUS = 34;
+const BOMB_RADIUS = 28;
+const SPAWN_INTERVAL = 900;   // ms between spawns
 const BOMB_CHANCE = 0.12;
-const MISS_PENALTY = 1;
 const MAX_LIVES = 3;
-const COMBO_WINDOW = 1200; // ms to maintain combo
-const INITIAL_VY = -12 - Math.random() * 3;
-const HALF_DRIFT = 3; // horizontal drift for sliced halves
+const COMBO_WINDOW = 1200;    // ms to maintain combo
+const INITIAL_VY_MIN = -900;  // px/s (upward)
+const INITIAL_VY_MAX = -700;  // px/s
+const HALF_DRIFT = 150;       // px/s horizontal drift for sliced halves
+const HALF_VY_KICK = -120;    // px/s upward kick when sliced
 
 let nextId = 0;
 
@@ -37,6 +39,7 @@ export interface EngineState {
   popups: ComboPopup[];
   lastSpawn: number;
   lastSliceTime: number;
+  lastTick: number;
   animFrame: number;
 }
 
@@ -61,6 +64,7 @@ export function createInitialState(width: number, height: number): EngineState {
     popups: [],
     lastSpawn: 0,
     lastSliceTime: 0,
+    lastTick: 0,
     animFrame: 0,
   };
 }
@@ -70,9 +74,9 @@ function spawnEntity(state: EngineState) {
   const { width, height } = state;
   const x = FRUIT_RADIUS + Math.random() * (width - FRUIT_RADIUS * 2);
   const y = height + FRUIT_RADIUS;
-  const vx = (width / 2 - x) * (0.01 + Math.random() * 0.015) + (Math.random() - 0.5) * 2;
-  const vy = INITIAL_VY - Math.random() * 3;
-  const rotationSpeed = (Math.random() - 0.5) * 0.15;
+  const vx = (width / 2 - x) * (0.04 + Math.random() * 0.04) + (Math.random() - 0.5) * 200;
+  const vy = INITIAL_VY_MIN + Math.random() * (INITIAL_VY_MAX - INITIAL_VY_MIN);
+  const rotationSpeed = (Math.random() - 0.5) * 4;
 
   if (Math.random() < BOMB_CHANCE) {
     state.bombs.push({
@@ -151,23 +155,29 @@ export function tick(state: EngineState, now: number, callbacks?: {
 }) {
   if (state.phase !== "playing") return;
 
+  // Delta time in seconds, capped to avoid spiral of death
+  const dt = state.lastTick > 0
+    ? Math.min((now - state.lastTick) / 1000, 0.05)
+    : 1 / 60;
+  state.lastTick = now;
+
   // Spawn
   if (now - state.lastSpawn > SPAWN_INTERVAL) {
     spawnEntity(state);
     state.lastSpawn = now;
   }
 
-  // Physics - fruits
+  // Physics - fruits (dt-based)
   for (const f of state.fruits) {
     if (!f.active) continue;
-    f.vy += GRAVITY;
-    f.x += f.vx;
-    f.y += f.vy;
-    f.rotation += f.rotationSpeed;
+    f.vy += GRAVITY * dt;
+    f.x += f.vx * dt;
+    f.y += f.vy * dt;
+    f.rotation += f.rotationSpeed * dt;
     // Missed fruit (went below screen unsliced)
     if (f.y > state.height + 40) {
       f.active = false;
-      state.lives -= MISS_PENALTY;
+      state.lives -= 1;
       state.combo = 0;
       callbacks?.onMiss?.();
       if (state.lives <= 0) {
@@ -187,11 +197,11 @@ export function tick(state: EngineState, now: number, callbacks?: {
   // Physics - half fruits
   for (let i = state.halves.length - 1; i >= 0; i--) {
     const h = state.halves[i];
-    h.vy += GRAVITY;
-    h.x += h.vx;
-    h.y += h.vy;
-    h.rotation += h.rotationSpeed;
-    h.alpha -= 0.01;
+    h.vy += GRAVITY * dt;
+    h.x += h.vx * dt;
+    h.y += h.vy * dt;
+    h.rotation += h.rotationSpeed * dt;
+    h.alpha -= dt * 0.8;
     if (h.y > state.height + 60 || h.alpha <= 0) {
       state.halves.splice(i, 1);
     }
@@ -200,10 +210,10 @@ export function tick(state: EngineState, now: number, callbacks?: {
   // Physics - bombs
   for (const b of state.bombs) {
     if (!b.active) continue;
-    b.vy += GRAVITY;
-    b.x += b.vx;
-    b.y += b.vy;
-    b.rotation += b.rotationSpeed;
+    b.vy += GRAVITY * dt;
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.rotation += b.rotationSpeed * dt;
     if (b.y > state.height + 60) b.active = false;
   }
 
@@ -220,14 +230,14 @@ export function tick(state: EngineState, now: number, callbacks?: {
     state.halves.push(
       {
         type: f.type, x: f.x, y: f.y,
-        vx: baseVx - HALF_DRIFT, vy: -3,
-        rotation: f.rotation, rotationSpeed: -0.15,
+        vx: baseVx - HALF_DRIFT, vy: HALF_VY_KICK,
+        rotation: f.rotation, rotationSpeed: -3,
         radius: f.radius, side: -1, alpha: 1,
       },
       {
         type: f.type, x: f.x, y: f.y,
-        vx: baseVx + HALF_DRIFT, vy: -3,
-        rotation: f.rotation, rotationSpeed: 0.15,
+        vx: baseVx + HALF_DRIFT, vy: HALF_VY_KICK,
+        rotation: f.rotation, rotationSpeed: 3,
         radius: f.radius, side: 1, alpha: 1,
       },
     );
@@ -240,7 +250,7 @@ export function tick(state: EngineState, now: number, callbacks?: {
     }
     state.lastSliceTime = now;
     state.maxCombo = Math.max(state.maxCombo, state.combo);
-    state.score += state.combo; // 1 + combo bonus
+    state.score += state.combo;
 
     callbacks?.onSlice?.(f);
     if (state.combo >= 3) {
@@ -262,7 +272,7 @@ export function tick(state: EngineState, now: number, callbacks?: {
     return;
   }
 
-  // Update particles & popups
+  // Update particles & popups (dt-based for half fruits fade above, but particles use frame-based — acceptable since they're cosmetic)
   updateParticles(state.particles);
   updateCombos(state.popups);
 

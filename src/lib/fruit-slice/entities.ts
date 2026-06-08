@@ -65,7 +65,7 @@ function drawFruitDetails(
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(Math.cos(angle) * radius * 0.7, Math.sin(angle) * radius * 0.7);
-        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -75,7 +75,7 @@ function drawFruitDetails(
       // Small highlight
       ctx.beginPath();
       ctx.ellipse(-radius * 0.2, -radius * 0.25, radius * 0.15, radius * 0.1, -0.5, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
       ctx.fill();
       // Stem
       ctx.beginPath();
@@ -95,10 +95,10 @@ function drawFruitDetails(
       break;
 
     case "kiwi":
-      // Tiny seeds
+      // Tiny seeds — deterministic positions using golden angle
       for (let i = 0; i < 12; i++) {
         const angle = (i / 12) * Math.PI * 2 + 0.3;
-        const r = radius * (0.2 + Math.random() * 0.35);
+        const r = radius * (0.2 + ((i * 0.618) % 1) * 0.35);
         ctx.beginPath();
         ctx.arc(Math.cos(angle) * r, Math.sin(angle) * r, 1.5, 0, Math.PI * 2);
         ctx.fillStyle = colors.seeds;
@@ -200,7 +200,7 @@ export function drawFruitHalf(
   ctx.beginPath();
   ctx.moveTo(0, -radius);
   ctx.lineTo(0, radius);
-  ctx.strokeStyle = "rgba(255,255,255,0.3)";
+  ctx.strokeStyle = "rgba(0,0,0,0.15)";
   ctx.lineWidth = 1;
   ctx.stroke();
 
