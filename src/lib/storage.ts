@@ -18,13 +18,14 @@ export interface FileInfo {
 
 export function listFiles(): FileInfo[] {
   ensureUploadDir();
-  const files = fs.readdirSync(UPLOAD_DIR);
+  const files = fs.readdirSync(UPLOAD_DIR, { withFileTypes: true });
   return files
-    .map((name) => {
-      const filePath = path.join(UPLOAD_DIR, name);
+    .filter((entry) => entry.isFile())
+    .map((entry) => {
+      const filePath = path.join(UPLOAD_DIR, entry.name);
       const stat = fs.statSync(filePath);
       return {
-        name,
+        name: entry.name,
         size: stat.size,
         uploadedAt: stat.mtime.toISOString(),
       };
@@ -34,7 +35,12 @@ export function listFiles(): FileInfo[] {
 
 export function saveFile(buffer: Buffer, filename: string): void {
   ensureUploadDir();
-  fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+  // 安全检查：防止路径穿越
+  const sanitized = path.basename(filename);
+  if (!sanitized || sanitized !== filename) {
+    throw new Error("文件名包含非法字符");
+  }
+  fs.writeFileSync(path.join(UPLOAD_DIR, sanitized), buffer);
 }
 
 export function getFilePath(filename: string): string | null {

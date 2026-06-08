@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0",
+    "dev": "node server/dev.mjs",
     "build": "next build",
-    "start": "next start",
+    "analyze": "set ANALYZE=true&&next build",
+    "start": "node server/prod.mjs",
+    "start:all": "set NODE_ENV=production&&node server/dev.mjs",
     "ws-server": "node server/ws-server.mjs",
-    "chat-server": "node server/chat-server.mjs",
-    "dev-all": "node server/ws-server.mjs & node server/chat-server.mjs & next dev -H 0.0.0.0"
+    "dev-next": "next dev -H 0.0.0.0"
   },
   "dependencies": {
     "ffmpeg-static": "^5.3.0",
@@ -16,14 +17,19 @@
     "lucide-react": "^1.16.0",
     "marked": "^18.0.3",
     "marked-highlight": "^2.2.4",
+    "music-metadata-browser": "^2.5.11",
     "next": "^15.3.0",
+    "qr-scanner": "^1.4.2",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "ws": "^8.20.1"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.7",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",

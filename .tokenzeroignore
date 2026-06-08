@@ -1,0 +1,7 @@
+# .tokenzeroignore — patterns to exclude from tokenzero pack/analyze.
+# Same syntax as .gitignore.
+
+# Examples:
+# logs/
+# *.snap
+# secrets.env

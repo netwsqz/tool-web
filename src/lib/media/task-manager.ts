@@ -1,4 +1,6 @@
 import { randomUUID } from "crypto";
+import { execSync } from "child_process";
+import fs from "fs";
 import path from "path";
 import type { MediaTask, MediaTaskConfig, TaskStatus } from "@/types";
 import { buildArgs, detectFfmpeg, detectFfprobe, runFfmpeg, parseDuration } from "./ffmpeg";
@@ -77,7 +79,6 @@ export function createTask(config: MediaTaskConfig): MediaTask {
     const ffprobePath = detectFfprobe() || "ffprobe";
     const videoPath = resolvedInputs.video || resolvedInputs.audio || "";
     if (videoPath) {
-      const { execSync } = require("child_process");
       const result = execSync(
         `"${ffprobePath}" -v error -show_entries format=duration -of csv=p=0 "${videoPath}"`,
         { encoding: "utf8", timeout: 5000 }
@@ -126,7 +127,6 @@ export function createTask(config: MediaTaskConfig): MediaTask {
       // Cleanup
       cleanupTaskFiles(Object.values(config.inputs));
       try {
-        const fs = require("fs");
         if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
       } catch {
         // best-effort cleanup

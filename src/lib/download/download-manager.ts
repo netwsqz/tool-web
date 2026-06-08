@@ -57,42 +57,61 @@ export function createDownloadTask(
   tasks.set(taskId, task);
 
   // Build args and run
-  const args = buildDownloadArgs({
-    formatId,
-    formatType: format,
-    outputTemplate,
-    url,
-    cookiesFile,
-    browser: browser || undefined,
-  });
+  let args: string[];
+  try {
+    args = buildDownloadArgs({
+      formatId,
+      formatType: format,
+      outputTemplate,
+      url,
+      cookiesFile,
+      browser: browser || undefined,
+    });
+  } catch (err) {
+    task.status = "failed";
+    task.error = err instanceof Error ? err.message : "参数构建失败";
+    task.completedAt = Date.now();
+    return { ...task, logs: [...task.logs] };
+  }
 
   task.status = "running";
 
-  const { process: proc, promise } = runDownload(args, {
-    onLog: (line) => {
-      task.logs.push(line);
-      if (task.logs.length > MAX_LOG_LINES) {
-        task.logs = task.logs.slice(-MAX_LOG_LINES);
-      }
+  let proc: ReturnType<typeof runDownload>["process"];
+  let promise: Promise<void>;
+  try {
+    const result = runDownload(args, {
+      onLog: (line) => {
+        task.logs.push(line);
+        if (task.logs.length > MAX_LOG_LINES) {
+          task.logs = task.logs.slice(-MAX_LOG_LINES);
+        }
 
-      // Detect output filename from yt-dlp log
-      const destMatch = line.match(/\[download\]\s+Destination:\s+(.+)/i);
-      if (destMatch) {
-        task.outputFile = path.basename(destMatch[1].trim());
-      }
-    },
-    onProgress: (progress) => {
-      task.progress = progress.percent;
-      task.speed = progress.speed;
-      task.eta = progress.eta;
-      task.downloadedSize = progress.downloadedBytes;
-      if (progress.percent > 0) {
-        task.totalSize = Math.round(
-          progress.downloadedBytes / (progress.percent / 100)
-        );
-      }
-    },
-  });
+        // Detect output filename from yt-dlp log
+        const destMatch = line.match(/\[download\]\s+Destination:\s+(.+)/i);
+        if (destMatch) {
+          task.outputFile = path.basename(destMatch[1].trim());
+        }
+      },
+      onProgress: (progress) => {
+        task.progress = progress.percent;
+        task.speed = progress.speed;
+        task.eta = progress.eta;
+        task.downloadedSize = progress.downloadedBytes;
+        if (progress.percent > 0) {
+          task.totalSize = Math.round(
+            progress.downloadedBytes / (progress.percent / 100)
+          );
+        }
+      },
+    });
+    proc = result.process;
+    promise = result.promise;
+  } catch (err) {
+    task.status = "failed";
+    task.error = err instanceof Error ? err.message : "下载进程启动失败";
+    task.completedAt = Date.now();
+    return { ...task, logs: [...task.logs] };
+  }
 
   activeProcesses.set(taskId, proc);
 

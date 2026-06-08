@@ -579,11 +579,15 @@ export function runDownload(
 
   let cookieWarningFired = false;
 
+  let stderrBuf = "";
+
   const promise = new Promise<void>((resolve, reject) => {
     let lastLines: string[] = [];
 
     proc.stderr?.on("data", (chunk: Buffer) => {
-      const lines = chunk.toString().split(/\r?\n/);
+      stderrBuf += chunk.toString("utf8");
+      const lines = stderrBuf.split(/\r?\n/);
+      stderrBuf = lines.pop() || "";
       for (const line of lines) {
         if (!line.trim()) continue;
         lastLines.push(line);

@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 万能工具箱 — local-first personal toolbox. 浅色 Liquid Glass (iOS 26 风格), zh-CN, modular.
 
@@ -119,7 +119,7 @@ Next.js 15 App Router, TypeScript strict, Tailwind CSS v4, **GSAP 3.12+**, `ws`,
 
 ### 路径作用域规则
 
-`.claude/rules/` 下的规则按模块拆分，仅操作匹配路径时加载：
+`.Codex/rules/` 下的规则按模块拆分，仅操作匹配路径时加载：
 
 `everything-files.md` · `file-transfer.md` · `group-chat.md` · `media.md` · `music-player.md` · `p2p-transfer.md` · `download.md`
 
@@ -135,7 +135,3 @@ Next.js 15 App Router, TypeScript strict, Tailwind CSS v4, **GSAP 3.12+**, `ws`,
 ### Token 优化
 
 见 `@RTK.md` — hook 自动代理所有命令。RTK 输出被过滤, `npx tsc --noEmit` 只显示失败行。
-
-## 输出规则
-
-所有输出结束后在末尾加一个“喵喵喵”。

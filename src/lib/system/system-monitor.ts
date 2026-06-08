@@ -99,14 +99,16 @@ function getDisksImpl(): { mount: string; used: number; total: number }[] {
       'wmic logicaldisk get size,freespace,caption /format:csv',
       { encoding: "utf8", timeout: 3000 }
     );
+    // WMIC CSV 列顺序: Node, Size, FreeSpace, Caption
     const lines = out.trim().split("\n").filter((l) => l.includes(","));
     for (const line of lines) {
       const parts = line.trim().split(",");
-      if (parts.length >= 3) {
-        const mount = parts[1]?.replace(":", "") || "";
+      if (parts.length >= 4) {
+        const total = parseInt(parts[1], 10);
         const free = parseInt(parts[2], 10);
-        const total = parseInt(parts[3], 10);
-        if (!isNaN(total) && total > 0) {
+        const caption = parts[3] || "";
+        const mount = caption.replace(":", "");
+        if (!isNaN(total) && total > 0 && mount) {
           disks.push({ mount: mount + ":\\", used: total - free, total });
         }
       }

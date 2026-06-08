@@ -1,0 +1,7 @@
+{
+  "maxBytes": 524288,
+  "compressText": true,
+  "compressJson": true,
+  "out": ".tokenzero/context.md",
+  "ignore": []
+}

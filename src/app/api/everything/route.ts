@@ -19,11 +19,6 @@ export async function GET(request: Request) {
     };
 
     const data = await searchFiles(params);
-    // TEMP: verify folder detection works
-    if (data.results.length > 0) {
-      const sample = data.results.find(r => r.isFolder) || data.results[0];
-      console.log("[everything] sample result:", JSON.stringify(sample, null, 2));
-    }
     return NextResponse.json(data);
   } catch (err) {
     console.error("Everything search error:", err);

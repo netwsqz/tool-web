@@ -1,19 +1,83 @@
 /**
- * 你画我猜 — WebSocket 游戏服务器
+ * 万能工具箱 — 统一 WebSocket 服务器
+ * 提供 你画我猜 游戏 + 群聊 + P2P 信令 服务
  * Usage: node server/ws-server.mjs [port]
  * Default port: 3001
+ *
+ * WebSocket 路径:
+ *   /draw-guess   你画我猜游戏
+ *   /chat         群聊
+ *   /p2p          P2P 文件传输信令
  */
 
 import { createServer } from "http";
-import { readFileSync, existsSync } from "fs";
 import { createRequire } from "module";
+import { URL, fileURLToPath } from "url";
+import path from "path";
 
 const require = createRequire(import.meta.url);
 const { WebSocketServer, WebSocket } = require("ws");
 
-// ─── Word bank ──────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────
+//  Shared helpers
+// ──────────────────────────────────────────────────────────────
+
+function generateId() {
+  return Math.random().toString(36).substring(2, 10);
+}
+
+// 安全发送：捕获 send 异常防止整个进程崩溃
+function safeSend(ws, data) {
+  try {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(typeof data === "string" ? data : JSON.stringify(data));
+    }
+  } catch {
+    // 连接可能在检查和发送之间关闭 — 静默忽略
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+//  Shared Ping/Pong (keep-alive)
+// ──────────────────────────────────────────────────────────────
+
+const PING_INTERVAL = 30000; // 30s
+
+function setupPingPong(ws) {
+  let isAlive = true;
+  ws.isAlive = true;
+
+  ws.on("pong", () => {
+    isAlive = true;
+    ws.isAlive = true;
+  });
+
+  ws.on("close", () => {
+    isAlive = false;
+    ws.isAlive = false;
+  });
+
+  return ws;
+}
+
+// 定期发送 ping 保活所有 WebSocket 连接
+const pingTimer = setInterval(() => {
+  for (const sock of p2pSockets) {
+    if (sock.readyState === WebSocket.OPEN) {
+      sock.ping();
+    }
+  }
+  // 游戏/群聊的连接在各 handler 内通过 setupPingPong 管理
+}, PING_INTERVAL);
+
+// ──────────────────────────────────────────────────────────────
+//  你画我猜 — State & Logic
+// ──────────────────────────────────────────────────────────────
+
+const DRAW_TIME = 80;
+const TOTAL_ROUNDS = 3;
+
 const WORDS = [
-  // Easy
   { word: "苹果", hint: "水果", diff: 0 },
   { word: "香蕉", hint: "水果", diff: 0 },
   { word: "西瓜", hint: "水果", diff: 0 },
@@ -69,8 +133,6 @@ const WORDS = [
   { word: "帽子", hint: "服饰", diff: 0 },
   { word: "鞋子", hint: "服饰", diff: 0 },
   { word: "戒指", hint: "饰品", diff: 0 },
-
-  // Medium
   { word: "跑步", hint: "动作", diff: 1 },
   { word: "跳舞", hint: "动作", diff: 1 },
   { word: "唱歌", hint: "动作", diff: 1 },
@@ -119,8 +181,6 @@ const WORDS = [
   { word: "键盘", hint: "电脑外设", diff: 1 },
   { word: "地铁", hint: "交通", diff: 1 },
   { word: "红绿灯", hint: "交通", diff: 1 },
-
-  // Hard
   { word: "画蛇添足", hint: "成语", diff: 2 },
   { word: "守株待兔", hint: "成语", diff: 2 },
   { word: "掩耳盗铃", hint: "成语", diff: 2 },
@@ -175,32 +235,39 @@ function pickWords(count) {
   return shuffled.slice(0, count);
 }
 
-// ─── Game config ────────────────────────────────────────────
-const DRAW_TIME = 80; // seconds
-const TOTAL_ROUNDS = 3;
-
-// ─── State ──────────────────────────────────────────────────
-const rooms = new Map(); // roomCode -> { players, game }
-const playerSockets = new Map(); // playerId -> ws
-
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   for (let attempt = 0; attempt < 100; attempt++) {
     let code = "";
     for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    if (!rooms.has(code)) return code;
+    if (!gameRooms.has(code)) return code;
   }
   return "GAME";
 }
 
-function generateId() {
-  return Math.random().toString(36).substring(2, 10);
+// Game state
+const gameRooms = new Map(); // roomCode -> { players, game }
+const gamePlayerSockets = new Map(); // playerId -> ws
+
+function sendTo(playerId, msg) {
+  const ws = gamePlayerSockets.get(playerId);
+  safeSend(ws, msg);
 }
 
-// ─── Game Logic ─────────────────────────────────────────────
+function broadcastGame(room, msg) {
+  for (const p of room.players) sendTo(p.id, msg);
+}
+
+function broadcastGameExcept(room, exceptPlayerId, msg) {
+  for (const p of room.players) {
+    if (p.id !== exceptPlayerId) sendTo(p.id, msg);
+  }
+}
+
+// Game logic functions — unchanged from original
 function createGame(room) {
   return {
-    phase: "lobby", // lobby | drawing | round-end | game-over
+    phase: "lobby",
     currentRound: 0,
     totalRounds: TOTAL_ROUNDS,
     words: pickWords(TOTAL_ROUNDS * room.players.length),
@@ -218,11 +285,7 @@ function createGame(room) {
 function startRound(room) {
   const game = room.game;
   const players = room.players;
-
-  if (game.currentRound >= game.totalRounds * players.length) {
-    endGame(room);
-    return;
-  }
+  if (game.currentRound >= game.totalRounds * players.length) return endGame(room);
 
   const drawer = players[game.drawerIndex % players.length];
   const wordEntry = game.words[game.currentRound];
@@ -234,13 +297,11 @@ function startRound(room) {
   game.timeLeft = DRAW_TIME;
   game.correctGuessers = new Set();
 
-  // Clear canvas for new round
-  broadcast(room, { type: "clear", playerId: "server" });
+  broadcastGame(room, { type: "clear", playerId: "server" });
 
-  // Notify all — drawer gets word, guessers get hint only
   for (const p of players) {
     const isDrawer = p.id === drawer.id;
-    send(p.id, {
+    sendTo(p.id, {
       type: "round-start",
       round: game.currentRound + 1,
       totalRounds: game.totalRounds * players.length,
@@ -252,12 +313,10 @@ function startRound(room) {
     });
   }
 
-  // Start countdown
   if (game.timer) clearInterval(game.timer);
   game.timer = setInterval(() => {
     game.timeLeft--;
-    broadcast(room, { type: "time-left", timeLeft: game.timeLeft });
-
+    broadcastGame(room, { type: "time-left", timeLeft: game.timeLeft });
     if (game.timeLeft <= 0) {
       clearInterval(game.timer);
       game.timer = null;
@@ -271,82 +330,47 @@ function startRound(room) {
 
 function endRound(room) {
   const game = room.game;
-  if (game.timer) {
-    clearInterval(game.timer);
-    game.timer = null;
-  }
+  if (game.timer) { clearInterval(game.timer); game.timer = null; }
 
-  // Calculate scores
   const drawerId = game.drawerId;
   const players = room.players;
   const scores = { ...game.scores };
-
-  // Drawer gets points per correct guess + speed bonus
   const correctCount = game.correctGuessers.size;
   const speedRatio = game.timeLeft / DRAW_TIME;
   const drawerBonus = Math.max(0, Math.floor(speedRatio * 50));
   scores[drawerId] = (scores[drawerId] || 0) + correctCount * 50 + drawerBonus;
-
-  // Guessers get points for correct answer
   for (const guesserId of game.correctGuessers) {
     const speedBonus = Math.max(0, Math.floor(speedRatio * 100));
     scores[guesserId] = (scores[guesserId] || 0) + 100 + speedBonus;
   }
-
   game.scores = scores;
-
-  // Update player scores
-  for (const p of players) {
-    p.score = scores[p.id] || 0;
-  }
-
+  for (const p of players) p.score = scores[p.id] || 0;
   game.phase = "round-end";
 
-  broadcast(room, {
-    type: "round-end",
-    word: game.currentWord,
-    scores,
+  broadcastGame(room, {
+    type: "round-end", word: game.currentWord, scores,
     players: players.map((p) => ({ id: p.id, name: p.name, score: p.score })),
   });
 
-  // Next round after delay
   setTimeout(() => {
-    if (room.game && room.game.phase !== "game-over") {
-      startRound(room);
+    try {
+      if (room.game && room.game.phase !== "game-over") startRound(room);
+    } catch {
+      // 房间可能在超时期间被删除或状态已变更
     }
   }, 4000);
 }
 
 function endGame(room) {
   const game = room.game;
-  if (game.timer) {
-    clearInterval(game.timer);
-    game.timer = null;
-  }
-
+  if (game.timer) { clearInterval(game.timer); game.timer = null; }
   game.phase = "game-over";
-  const scores = game.scores;
-  let winner = null;
-  let maxScore = -1;
-  for (const [id, score] of Object.entries(scores)) {
-    if (score > maxScore) {
-      maxScore = score;
-      winner = id;
-    }
+  let winner = null, maxScore = -1;
+  for (const [id, score] of Object.entries(game.scores)) {
+    if (score > maxScore) { maxScore = score; winner = id; }
   }
   const winnerName = room.players.find((p) => p.id === winner)?.name || "";
-
-  broadcast(room, {
-    type: "game-over",
-    scores,
-    winner,
-    winnerName,
-    players: room.players.map((p) => ({
-      id: p.id,
-      name: p.name,
-      score: p.score,
-    })),
-  });
+  broadcastGame(room, { type: "game-over", scores: game.scores, winner, winnerName, players: room.players.map((p) => ({ id: p.id, name: p.name, score: p.score })) });
 }
 
 function checkGuess(room, playerId, text) {
@@ -354,298 +378,585 @@ function checkGuess(room, playerId, text) {
   if (game.phase !== "drawing") return { correct: false };
   if (playerId === game.drawerId) return { correct: false };
   if (game.correctGuessers.has(playerId)) return { correct: false };
-
-  // Check if guess contains the word
   const guess = text.trim().toLowerCase();
   const word = game.currentWord.toLowerCase();
   const isCorrect = guess === word || guess.includes(word) || word.includes(guess);
-
-  if (isCorrect) {
-    game.correctGuessers.add(playerId);
-  }
-
+  if (isCorrect) game.correctGuessers.add(playerId);
   return { correct: isCorrect };
 }
 
-// ─── WebSocket helpers ──────────────────────────────────────
-function send(playerId, msg) {
-  const ws = playerSockets.get(playerId);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(msg));
-  }
-}
+function leaveGameRoom(playerId) {
+  if (!playerId) return;
+  for (const [, room] of gameRooms) {
+    const idx = room.players.findIndex((p) => p.id === playerId);
+    if (idx === -1) continue;
+    const player = room.players[idx];
+    room.players.splice(idx, 1);
+    gamePlayerSockets.delete(playerId);
 
-function broadcast(room, msg) {
-  for (const p of room.players) {
-    send(p.id, msg);
-  }
-}
-
-function broadcastExcept(room, exceptPlayerId, msg) {
-  for (const p of room.players) {
-    if (p.id !== exceptPlayerId) {
-      send(p.id, msg);
+    if (room.players.length === 0) {
+      if (room.game && room.game.timer) clearInterval(room.game.timer);
+      gameRooms.delete(room.code);
+      return;
     }
-  }
-}
-
-// ─── HTTP health check ──────────────────────────────────────
-const httpServer = createServer((req, res) => {
-  if (req.url === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, rooms: rooms.size }));
+    if (room.game && room.game.phase === "drawing" && room.game.drawerId === playerId) {
+      if (room.game.timer) { clearInterval(room.game.timer); room.game.timer = null; }
+      endRound(room);
+    }
+    broadcastGame(room, { type: "players", players: room.players.map((p) => ({ id: p.id, name: p.name, score: p.score, isDrawer: room.game?.drawerId === p.id })) });
     return;
   }
-  res.writeHead(404);
-  res.end();
-});
+}
 
-// ─── WebSocket Server ──────────────────────────────────────
-const PORT = parseInt(process.argv[2], 10) || 3001;
-const wss = new WebSocketServer({ server: httpServer });
+// ──────────────────────────────────────────────────────────────
+//  群聊 — State & Logic
+// ──────────────────────────────────────────────────────────────
 
-wss.on("connection", (ws) => {
-  let playerId = null;
-  let currentRoom = null;
+const CHAT_MAX_MESSAGES = 200;
+const CHAT_CLEANUP_DELAY = 5 * 60 * 1000;
+
+const chatRooms = new Map(); // roomId -> { id, name, members[], messages[], createdAt }
+const chatMemberSockets = new Map(); // memberId -> ws
+const chatCleanupTimers = new Map(); // roomId -> setTimeout
+
+function createChatRoom(name) {
+  const room = { id: generateId(), name, members: [], messages: [], createdAt: Date.now() };
+  chatRooms.set(room.id, room);
+  return room;
+}
+
+function deleteChatRoom(roomId) {
+  chatRooms.delete(roomId);
+  const t = chatCleanupTimers.get(roomId);
+  if (t) clearTimeout(t);
+  chatCleanupTimers.delete(roomId);
+}
+
+function scheduleChatCleanup(roomId) {
+  const existing = chatCleanupTimers.get(roomId);
+  if (existing) clearTimeout(existing);
+  chatCleanupTimers.set(roomId, setTimeout(() => {
+    const room = chatRooms.get(roomId);
+    if (room && room.members.length === 0) deleteChatRoom(roomId);
+  }, CHAT_CLEANUP_DELAY));
+}
+
+function addChatMessage(roomId, msg) {
+  const room = chatRooms.get(roomId);
+  if (!room) return;
+  room.messages.push(msg);
+  if (room.messages.length > CHAT_MAX_MESSAGES) {
+    room.messages = room.messages.slice(-CHAT_MAX_MESSAGES);
+  }
+}
+
+function sendToChat(memberId, msg) {
+  const ws = chatMemberSockets.get(memberId);
+  safeSend(ws, msg);
+}
+
+function broadcastChat(roomId, msg, excludeId) {
+  const room = chatRooms.get(roomId);
+  if (!room) return;
+  for (const m of room.members) {
+    if (m.id !== excludeId) sendToChat(m.id, msg);
+  }
+}
+
+function broadcastChatRoomList() {
+  const list = [];
+  for (const [, room] of chatRooms) {
+    list.push({ id: room.id, name: room.name, memberCount: room.members.length });
+  }
+  for (const [, room] of chatRooms) {
+    for (const m of room.members) sendToChat(m.id, { type: "room-list", rooms: list });
+  }
+}
+
+function leaveChatRoom(memberId, currentRoomId) {
+  if (!memberId || !currentRoomId) return;
+  const room = chatRooms.get(currentRoomId);
+  if (room) {
+    const idx = room.members.findIndex((m) => m.id === memberId);
+    if (idx !== -1) {
+      const [member] = room.members.splice(idx, 1);
+      broadcastChat(currentRoomId, { type: "member-left", memberId, memberName: member.name }, memberId);
+      if (room.members.length === 0) scheduleChatCleanup(currentRoomId);
+    }
+  }
+  // 让离开者在 socket 关闭前收到更新的 room-list
+  const list = [];
+  for (const [, r] of chatRooms) {
+    list.push({ id: r.id, name: r.name, memberCount: r.members.length });
+  }
+  sendToChat(memberId, { type: "room-list", rooms: list });
+  chatMemberSockets.delete(memberId);
+  broadcastChatRoomList();
+}
+
+function handleChatConnection(ws) {
+  let memberId = null;
+  let currentRoomId = null;
+  let memberName = "";
 
   ws.on("message", (data) => {
     let msg;
+    try { msg = JSON.parse(data.toString()); } catch { return; }
+
     try {
-      msg = JSON.parse(data.toString());
-    } catch {
-      return;
-    }
-
     switch (msg.type) {
-      case "join": {
-        const { room: roomCode, name } = msg;
-        if (!roomCode || !name) {
-          ws.send(JSON.stringify({ type: "error", message: "缺少房间号或昵称" }));
-          return;
+      case "get-rooms":
+        const list = [];
+        for (const [, r] of chatRooms) list.push({ id: r.id, name: r.name, memberCount: r.members.length });
+        ws.send(JSON.stringify({ type: "room-list", rooms: list }));
+        break;
+
+      case "join-room": {
+        const { roomId, nickname } = msg;
+        if (!roomId || !nickname) { ws.send(JSON.stringify({ type: "error", message: "缺少房间号或昵称" })); return; }
+        if (nickname.length > 20) { ws.send(JSON.stringify({ type: "error", message: "昵称过长" })); return; }
+        const room = chatRooms.get(roomId);
+        if (!room) { ws.send(JSON.stringify({ type: "error", message: "房间不存在" })); return; }
+
+        const collision = room.members.find((m) => m.name === nickname);
+        if (collision) {
+          const oldWs = chatMemberSockets.get(collision.id);
+          if (oldWs && oldWs.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "error", message: "该昵称已被使用" })); return;
+          }
+          const idx = room.members.findIndex((m) => m.id === collision.id);
+          if (idx !== -1) room.members.splice(idx, 1);
+          chatMemberSockets.delete(collision.id);
         }
+        if (memberId && currentRoomId) leaveChatRoom(memberId, currentRoomId);
 
-        // Create or find room
-        let room = rooms.get(roomCode);
-        if (!room) {
-          room = { code: roomCode, players: [], game: null };
-          rooms.set(roomCode, room);
-        }
+        memberId = generateId(); memberName = nickname; currentRoomId = roomId;
+        chatMemberSockets.set(memberId, ws);
+        room.members.push({ id: memberId, name: nickname });
 
-        if (room.players.length >= 8) {
-          ws.send(JSON.stringify({ type: "error", message: "房间已满 (最多8人)" }));
-          return;
-        }
+        ws.send(JSON.stringify({ type: "room-joined", roomId: room.id, roomName: room.name, members: room.members.map((m) => ({ id: m.id, name: m.name })), messages: room.messages, yourId: memberId }));
+        broadcastChat(roomId, { type: "member-joined", member: { id: memberId, name: nickname } }, memberId);
+        broadcastChatRoomList();
+        break;
+      }
 
-        // Check if name is taken
-        if (room.players.some((p) => p.name === name)) {
-          ws.send(JSON.stringify({ type: "error", message: "昵称已被使用" }));
-          return;
-        }
+      case "create-room": {
+        const { roomName, nickname } = msg;
+        if (!roomName || !nickname) { ws.send(JSON.stringify({ type: "error", message: "缺少房间名或昵称" })); return; }
+        if (roomName.length > 50) { ws.send(JSON.stringify({ type: "error", message: "房间名过长" })); return; }
+        if (memberId && currentRoomId) leaveChatRoom(memberId, currentRoomId);
 
-        // Leave previous room if any
-        if (playerId) {
-          leaveRoom(playerId);
-        }
+        memberId = generateId(); memberName = nickname;
+        chatMemberSockets.set(memberId, ws);
+        const room = createChatRoom(roomName.trim());
+        currentRoomId = room.id;
+        room.members.push({ id: memberId, name: nickname });
 
-        playerId = generateId();
-        playerSockets.set(playerId, ws);
+        ws.send(JSON.stringify({ type: "room-created", roomId: room.id, roomName: room.name, members: room.members.map((m) => ({ id: m.id, name: m.name })), yourId: memberId }));
+        broadcastChatRoomList();
+        break;
+      }
 
-        const player = { id: playerId, name, score: 0 };
-        room.players.push(player);
+      case "leave-room":
+        leaveChatRoom(memberId, currentRoomId);
+        currentRoomId = null; memberId = null;
+        break;
+
+      case "message": {
+        if (!memberId || !currentRoomId) return;
+        const { text, clientMsgId } = msg;
+        if (!text || !text.trim()) return;
+        const chatMsg = { id: generateId(), type: "text", senderId: memberId, senderName: memberName, text: text.trim(), timestamp: Date.now(), clientMsgId };
+        addChatMessage(currentRoomId, chatMsg);
+        broadcastChat(currentRoomId, { ...chatMsg, type: "message" });
+        break;
+      }
+
+      case "file-shared": {
+        if (!memberId || !currentRoomId) return;
+        const { fileName, fileSize, url, clientMsgId } = msg;
+        if (!fileName || !url) return;
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return;
+        } catch { return; }
+        const chatMsg = { id: generateId(), type: "file", senderId: memberId, senderName: memberName, fileName, fileSize: fileSize || 0, url, timestamp: Date.now(), clientMsgId };
+        addChatMessage(currentRoomId, chatMsg);
+        broadcastChat(currentRoomId, { ...chatMsg, type: "file-shared" });
+        break;
+      }
+
+      case "typing": {
+        if (!memberId || !currentRoomId) return;
+        broadcastChat(currentRoomId, { type: "typing", senderId: memberId, isTyping: !!msg.isTyping }, memberId);
+        break;
+      }
+    }
+    } catch {
+      safeSend(ws, { type: "error", message: "服务器内部错误" });
+    }
+  });
+
+  ws.on("close", () => leaveChatRoom(memberId, currentRoomId));
+  ws.on("error", () => leaveChatRoom(memberId, currentRoomId));
+}
+
+// ──────────────────────────────────────────────────────────────
+//  HTTP Server + WebSocket Setup
+// ──────────────────────────────────────────────────────────────
+
+// ──────────────────────────────────────────────────────────────
+//  P2P 文件传输信令 — State & Handlers
+// ──────────────────────────────────────────────────────────────
+
+const p2pRooms = new Map(); // roomCode -> { peers: [{id, ws, name}] }
+const p2pSockets = new Set(); // all connected P2P WS (for broadcasting room list)
+const P2P_ROOM_TTL = 5 * 60 * 1000; // 5 minutes
+const p2pCleanupTimers = new Map(); // roomCode -> cleanup timer
+
+function generateRoomCodeShort() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  for (let attempt = 0; attempt < 100; attempt++) {
+    let code = "";
+    for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    if (!p2pRooms.has(code)) return code;
+  }
+  return "FILE";
+}
+
+function broadcastP2PRoomList() {
+  const available = [];
+  for (const [code, room] of p2pRooms) {
+    if (room.peers.length < 2) {
+      available.push({
+        roomCode: code,
+        peerName: room.peers[0]?.name || "未知",
+        createdAt: room.createdAt || Date.now(),
+      });
+    }
+  }
+  for (const sock of p2pSockets) {
+    safeSend(sock, { type: "room-list", rooms: available });
+  }
+}
+
+function scheduleP2PRoomCleanup(roomCode) {
+  cancelP2PRoomCleanup(roomCode);
+  p2pCleanupTimers.set(roomCode, setTimeout(() => {
+    p2pCleanupTimers.delete(roomCode);
+    if (p2pRooms.has(roomCode)) {
+      const room = p2pRooms.get(roomCode);
+      if (room && room.peers.length < 2) {
+        p2pRooms.delete(roomCode);
+        broadcastP2PRoomList();
+      }
+    }
+  }, P2P_ROOM_TTL));
+}
+
+function cancelP2PRoomCleanup(roomCode) {
+  const existing = p2pCleanupTimers.get(roomCode);
+  if (existing) {
+    clearTimeout(existing);
+    p2pCleanupTimers.delete(roomCode);
+  }
+}
+
+function handleP2PConnection(ws) {
+  let peerId = null;
+  let currentRoom = null;
+  setupPingPong(ws);
+  p2pSockets.add(ws);
+
+  const sendToPeer = (targetPeerId, msg) => {
+    const peer = currentRoom?.peers.find((p) => p.id === targetPeerId);
+    safeSend(peer?.ws, msg);
+  };
+
+  ws.on("message", (data) => {
+    let msg;
+    try { msg = JSON.parse(data.toString()); } catch { return; }
+
+    try {
+    switch (msg.type) {
+      case "create-room": {
+        if (peerId && currentRoom) leaveP2PRoom(peerId);
+        peerId = generateId();
+        const roomCode = generateRoomCodeShort();
+        currentRoom = { code: roomCode, createdAt: Date.now(), peers: [{ id: peerId, ws, name: msg.name || "Peer" }] };
+        p2pRooms.set(roomCode, currentRoom);
+        scheduleP2PRoomCleanup(roomCode);
+        broadcastP2PRoomList();
+        ws.send(JSON.stringify({ type: "room-created", roomCode, peerId }));
+        break;
+      }
+
+      case "join-room": {
+        const { roomCode, name } = msg;
+        if (!roomCode) { ws.send(JSON.stringify({ type: "error", message: "缺少房间号" })); return; }
+        const room = p2pRooms.get(roomCode);
+        if (!room) { ws.send(JSON.stringify({ type: "error", message: "房间不存在" })); return; }
+        if (room.peers.length >= 2) { ws.send(JSON.stringify({ type: "error", message: "房间已满" })); return; }
+
+        if (peerId && currentRoom) leaveP2PRoom(peerId);
+        peerId = generateId();
+        room.peers.push({ id: peerId, ws, name: name || "Peer" });
         currentRoom = room;
 
-        ws.send(
-          JSON.stringify({
-            type: "joined",
-            playerId,
-            room: roomCode,
-            players: room.players.map((p) => ({
-              id: p.id,
-              name: p.name,
-              score: p.score,
-              isDrawer: room.game?.drawerId === p.id,
-            })),
-            game: room.game
-              ? {
-                  phase: room.game.phase,
-                  currentRound: room.game.currentRound,
-                  totalRounds: room.game.totalRounds,
-                  timeLeft: room.game.timeLeft,
-                }
-              : null,
-          })
-        );
+        // Notify joiner
+        ws.send(JSON.stringify({
+          type: "room-joined", roomCode, peerId,
+          remotePeer: { id: room.peers[0].id, name: room.peers[0].name },
+        }));
 
-        broadcastExcept(room, playerId, {
-          type: "players",
-          players: room.players.map((p) => ({
-            id: p.id,
-            name: p.name,
-            score: p.score,
-            isDrawer: room.game?.drawerId === p.id,
-          })),
+        // Notify existing peer that someone joined
+        const joiner = room.peers[1];
+        sendToPeer(room.peers[0].id, {
+          type: "peer-joined",
+          peerId: joiner.id,
+          name: joiner.name,
         });
 
-        console.log(`[+] ${name} joined ${roomCode} (${room.players.length} players)`);
-        break;
-      }
-
-      case "start-game": {
-        if (!currentRoom) return;
-        const room = currentRoom;
-        if (room.players.length < 2) {
-          ws.send(
-            JSON.stringify({ type: "error", message: "至少需要2名玩家" })
-          );
-          return;
+        // Room is now full — cancel TTL and broadcast updated list
+        if (room.peers.length >= 2) {
+          cancelP2PRoomCleanup(roomCode);
         }
-        if (room.game && room.game.phase === "drawing") return;
-
-        // Reset scores
-        for (const p of room.players) p.score = 0;
-
-        room.game = createGame(room);
-        console.log(`[+] Game started in ${room.code}`);
-        startRound(room);
+        broadcastP2PRoomList();
         break;
       }
 
-      case "draw": {
-        if (!currentRoom || !currentRoom.game) return;
-        const room = currentRoom;
-        if (room.game.drawerId !== playerId) return;
-        broadcastExcept(room, playerId, {
-          type: "draw",
-          stroke: msg.stroke,
-          playerId,
-        });
+      case "offer": {
+        if (!currentRoom || !msg.sdp) return;
+        const other = currentRoom.peers.find((p) => p.id !== peerId);
+        if (other) sendToPeer(other.id, { type: "offer", sdp: msg.sdp, peerId });
         break;
       }
 
-      case "undo": {
-        if (!currentRoom || !currentRoom.game) return;
-        const room = currentRoom;
-        if (room.game.drawerId !== playerId) return;
-        broadcastExcept(room, playerId, {
-          type: "undo",
-          playerId,
-        });
+      case "answer": {
+        if (!currentRoom || !msg.sdp) return;
+        const other = currentRoom.peers.find((p) => p.id !== peerId);
+        if (other) sendToPeer(other.id, { type: "answer", sdp: msg.sdp, peerId });
         break;
       }
 
-      case "clear": {
-        if (!currentRoom || !currentRoom.game) return;
-        const room = currentRoom;
-        if (room.game.drawerId !== playerId) return;
-        broadcastExcept(room, playerId, {
-          type: "clear",
-          playerId,
-        });
+      case "ice-candidate": {
+        if (!currentRoom || !msg.candidate) return;
+        const other = currentRoom.peers.find((p) => p.id !== peerId);
+        if (other) sendToPeer(other.id, { type: "ice-candidate", candidate: msg.candidate, peerId });
         break;
       }
 
-      case "guess": {
-        if (!currentRoom || !currentRoom.game) return;
-        const room = currentRoom;
-        const { correct } = checkGuess(room, playerId, msg.text);
-        const player = room.players.find((p) => p.id === playerId);
-
-        broadcast(room, {
-          type: "guess",
-          playerId,
-          playerName: player?.name || "?",
-          text: msg.text,
-          isCorrect: correct,
-        });
-
-        // Check if all non-drawer players have guessed correctly
-        if (correct) {
-          const nonDrawers = room.players.filter(
-            (p) => p.id !== room.game.drawerId
-          );
-          if (
-            nonDrawers.length > 0 &&
-            nonDrawers.every((p) => room.game.correctGuessers.has(p.id))
-          ) {
-            // Everyone got it — end round early
-            if (room.game.timer) {
-              clearInterval(room.game.timer);
-              room.game.timer = null;
-            }
-            setTimeout(() => endRound(room), 1000);
+      case "list-rooms": {
+        const available = [];
+        for (const [code, room] of p2pRooms) {
+          if (room.peers.length < 2) {
+            available.push({ roomCode: code, peerName: room.peers[0]?.name || "未知" });
           }
         }
+        ws.send(JSON.stringify({ type: "room-list", rooms: available }));
         break;
       }
 
-      case "leave": {
-        leaveRoom(playerId);
+      case "leave":
+        leaveP2PRoom(peerId);
         break;
-      }
+    }
+    } catch {
+      safeSend(ws, { type: "error", message: "服务器内部错误" });
     }
   });
 
-  ws.on("close", () => {
-    leaveRoom(playerId);
-    playerSockets.delete(playerId);
-  });
+  ws.on("close", () => { p2pSockets.delete(ws); leaveP2PRoom(peerId); });
+  ws.on("error", () => { p2pSockets.delete(ws); leaveP2PRoom(peerId); });
+}
 
-  ws.on("error", () => {
-    leaveRoom(playerId);
-    playerSockets.delete(playerId);
-  });
-});
-
-function leaveRoom(playerId) {
-  if (!playerId) return;
-  // Find room containing this player
-  for (const [, room] of rooms) {
-    const idx = room.players.findIndex((p) => p.id === playerId);
+function leaveP2PRoom(peerId) {
+  if (!peerId) return;
+  for (const [, room] of p2pRooms) {
+    const idx = room.peers.findIndex((p) => p.id === peerId);
     if (idx === -1) continue;
-
-    const player = room.players[idx];
-    room.players.splice(idx, 1);
-    playerSockets.delete(playerId);
-
-    console.log(`[-] ${player.name} left ${room.code} (${room.players.length} players)`);
-
-    if (room.players.length === 0) {
-      // Clean up empty room
-      if (room.game && room.game.timer) {
-        clearInterval(room.game.timer);
-      }
-      rooms.delete(room.code);
-      console.log(`[x] Room ${room.code} deleted`);
-      return;
-    }
-
-    // If game was in progress, handle drawer leaving
-    if (room.game && room.game.phase === "drawing") {
-      if (room.game.drawerId === playerId) {
-        // Drawer left — end current round
-        if (room.game.timer) {
-          clearInterval(room.game.timer);
-          room.game.timer = null;
-        }
-        endRound(room);
+    const [leaver] = room.peers.splice(idx, 1);
+    // Notify remaining peer
+    for (const peer of room.peers) {
+      if (peer.ws.readyState === WebSocket.OPEN) {
+        peer.ws.send(JSON.stringify({ type: "peer-left", peerId }));
       }
     }
-
-    // Notify remaining players
-    broadcast(room, {
-      type: "players",
-      players: room.players.map((p) => ({
-        id: p.id,
-        name: p.name,
-        score: p.score,
-        isDrawer: room.game?.drawerId === p.id,
-      })),
-    });
+    if (room.peers.length === 0) {
+      cancelP2PRoomCleanup(room.code);
+      p2pRooms.delete(room.code);
+    } else if (room.peers.length < 2) {
+      // Room has 1 peer left waiting — start TTL
+      scheduleP2PRoomCleanup(room.code);
+    }
+    broadcastP2PRoomList();
     return;
   }
 }
 
-httpServer.listen(PORT, "0.0.0.0", () => {
-  console.log(`🎨 你画我猜 WebSocket 服务器运行在 ws://0.0.0.0:${PORT}`);
-  console.log(`   健康检查: http://0.0.0.0:${PORT}/health`);
-});
+// ──────────────────────────────────────────────────────────────
+//  Exported: attach WebSocket handlers to any HTTP server
+// ──────────────────────────────────────────────────────────────
+
+export function attachWebSocket(httpServer) {
+  const wssGame = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 }); // 1MB max
+  const wssChat = new WebSocketServer({ noServer: true, maxPayload: 256 * 1024 }); // 256KB max
+  const wssP2P = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 }); // 64KB max
+
+  // Upgrade routing by URL path
+  httpServer.on("upgrade", (request, socket, head) => {
+    let pathname;
+    try {
+      pathname = new URL(request.url, "http://localhost").pathname;
+    } catch {
+      socket.destroy();
+      return;
+    }
+
+    switch (pathname) {
+      case "/ws/draw-guess":
+        wssGame.handleUpgrade(request, socket, head, (ws) => {
+          wssGame.emit("connection", ws, request);
+        });
+        break;
+      case "/ws/chat":
+        wssChat.handleUpgrade(request, socket, head, (ws) => {
+          wssChat.emit("connection", ws, request);
+        });
+        break;
+      case "/ws/p2p":
+        wssP2P.handleUpgrade(request, socket, head, (ws) => {
+          wssP2P.emit("connection", ws, request);
+        });
+        break;
+      default:
+        socket.destroy();
+    }
+  });
+
+  // ── Game connection handler ──
+  wssGame.on("connection", (ws) => {
+    let playerId = null;
+    let currentRoom = null;
+
+    ws.on("message", (data) => {
+      let msg;
+      try { msg = JSON.parse(data.toString()); } catch { return; }
+
+      try {
+      switch (msg.type) {
+        case "join": {
+          const { room: roomCode, name } = msg;
+          if (!roomCode || !name) {
+            ws.send(JSON.stringify({ type: "error", message: "缺少房间号或昵称" })); return;
+          }
+          let room = gameRooms.get(roomCode);
+          if (!room) {
+            room = { code: roomCode, players: [], game: null };
+            gameRooms.set(roomCode, room);
+          }
+          if (room.players.length >= 8) { ws.send(JSON.stringify({ type: "error", message: "房间已满" })); return; }
+          if (room.players.some((p) => p.name === name)) { ws.send(JSON.stringify({ type: "error", message: "昵称已被使用" })); return; }
+
+          if (playerId) leaveGameRoom(playerId);
+          playerId = generateId();
+          gamePlayerSockets.set(playerId, ws);
+          room.players.push({ id: playerId, name, score: 0 });
+          currentRoom = room;
+
+          ws.send(JSON.stringify({ type: "joined", playerId, room: roomCode, players: room.players.map((p) => ({ id: p.id, name: p.name, score: p.score, isDrawer: room.game?.drawerId === p.id })), game: room.game ? { phase: room.game.phase, currentRound: room.game.currentRound, totalRounds: room.game.totalRounds, timeLeft: room.game.timeLeft } : null }));
+          broadcastGameExcept(room, playerId, { type: "players", players: room.players.map((p) => ({ id: p.id, name: p.name, score: p.score, isDrawer: room.game?.drawerId === p.id })) });
+          break;
+        }
+
+        case "start-game": {
+          if (!currentRoom) return;
+          if (currentRoom.players.length < 2) { ws.send(JSON.stringify({ type: "error", message: "至少需要2名玩家" })); return; }
+          if (currentRoom.game?.phase === "drawing") return;
+          for (const p of currentRoom.players) p.score = 0;
+          currentRoom.game = createGame(currentRoom);
+          startRound(currentRoom);
+          break;
+        }
+
+        case "draw": {
+          if (!currentRoom?.game || currentRoom.game.drawerId !== playerId) return;
+          broadcastGameExcept(currentRoom, playerId, { type: "draw", stroke: msg.stroke, playerId });
+          break;
+        }
+        case "undo": {
+          if (!currentRoom?.game || currentRoom.game.drawerId !== playerId) return;
+          broadcastGameExcept(currentRoom, playerId, { type: "undo", playerId });
+          break;
+        }
+        case "clear": {
+          if (!currentRoom?.game || currentRoom.game.drawerId !== playerId) return;
+          broadcastGameExcept(currentRoom, playerId, { type: "clear", playerId });
+          break;
+        }
+
+        case "guess": {
+          if (!currentRoom?.game) return;
+          const { correct } = checkGuess(currentRoom, playerId, msg.text);
+          const player = currentRoom.players.find((p) => p.id === playerId);
+          broadcastGame(currentRoom, { type: "guess", playerId, playerName: player?.name || "?", text: msg.text, isCorrect: correct });
+          if (correct) {
+            const nonDrawers = currentRoom.players.filter((p) => p.id !== currentRoom.game.drawerId);
+            if (nonDrawers.length > 0 && nonDrawers.every((p) => currentRoom.game.correctGuessers.has(p.id))) {
+              if (currentRoom.game.timer) { clearInterval(currentRoom.game.timer); currentRoom.game.timer = null; }
+              setTimeout(() => endRound(currentRoom), 1000);
+            }
+          }
+          break;
+        }
+
+        case "leave": leaveGameRoom(playerId); break;
+      }
+      } catch (err) {
+        // 防止消息处理异常导致进程崩溃
+        safeSend(ws, { type: "error", message: "服务器内部错误" });
+      }
+    });
+
+    ws.on("close", () => { leaveGameRoom(playerId); gamePlayerSockets.delete(playerId); });
+    ws.on("error", () => { leaveGameRoom(playerId); gamePlayerSockets.delete(playerId); });
+  });
+
+  // ── Chat connection handler ──
+  wssChat.on("connection", (ws) => {
+    handleChatConnection(ws);
+  });
+
+  // ── P2P connection handler ──
+  wssP2P.on("connection", (ws) => {
+    handleP2PConnection(ws);
+  });
+}
+
+// ── Init default chat rooms ──
+createChatRoom("大厅");
+
+// ── Standalone entry ──
+const thisFile = process.argv[1] ? path.resolve(process.argv[1]) : "";
+if (thisFile && fileURLToPath(import.meta.url) === thisFile) {
+  const httpServer = createServer((req, res) => {
+    if (req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, gameRooms: gameRooms.size, chatRooms: chatRooms.size, p2pRooms: p2pRooms.size }));
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+  });
+
+  attachWebSocket(httpServer);
+
+  const PORT = parseInt(process.argv[2], 10) || 3001;
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`🌐 统一 WebSocket 服务器运行在 ws://0.0.0.0:${PORT}`);
+    console.log(`   健康检查: http://0.0.0.0:${PORT}/health`);
+    console.log(`   游戏服务: ws://0.0.0.0:${PORT}/ws/draw-guess`);
+    console.log(`   群聊服务: ws://0.0.0.0:${PORT}/ws/chat`);
+    console.log(`   P2P 信令: ws://0.0.0.0:${PORT}/ws/p2p`);
+  });
+}
