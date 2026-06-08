@@ -13,7 +13,7 @@ export default function ObsidianPage() {
   return (
     <div className="h-screen flex flex-col">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-white/5 flex-shrink-0">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-black/5 flex-shrink-0">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-[var(--color-text-secondary)]
@@ -23,11 +23,11 @@ export default function ObsidianPage() {
         </Link>
         <div className="flex items-center gap-3">
           {o.error && (
-            <span className="text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded-lg">
+            <span className="text-xs text-[var(--color-destructive)] bg-[var(--color-destructive)]/10 px-2 py-1 rounded-lg">
               {o.error}
               <button
                 onClick={() => o.setError(null)}
-                className="ml-2 hover:text-red-300"
+                className="ml-2 hover:text-[var(--color-destructive)]"
               >
                 ×
               </button>

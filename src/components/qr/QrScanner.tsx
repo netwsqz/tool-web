@@ -40,8 +40,17 @@ export function QrScanner({ scanning, scannedText, scanError, onScan, onReset }:
       {/* Drop zone or result */}
       {!scannedText && !scanError && (
         <div
+          role="button"
+          tabIndex={scanning ? -1 : 0}
+          aria-label="上传二维码图片"
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && !scanning) {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
           onClick={() => inputRef.current?.click()}
           className={`flex flex-col items-center justify-center gap-3 py-16 rounded-2xl border-2 border-dashed border-[var(--color-border)] cursor-pointer transition-colors hover:border-[var(--color-accent)]/40 ${
             scanning ? "opacity-50 pointer-events-none" : ""
@@ -75,10 +84,10 @@ export function QrScanner({ scanning, scannedText, scanError, onScan, onReset }:
       {/* Scan error */}
       {scanError && (
         <div className="flex flex-col items-center gap-4 py-12 rounded-2xl border border-[var(--color-border)]">
-          <div className="size-12 rounded-xl bg-red-500/20 flex items-center justify-center">
-            <Upload className="size-6 text-red-400" />
+          <div className="size-12 rounded-xl bg-[var(--color-destructive)]/20 flex items-center justify-center">
+            <Upload className="size-6 text-[var(--color-destructive)]" />
           </div>
-          <p className="text-sm text-red-400">{scanError}</p>
+          <p className="text-sm text-[var(--color-destructive)]">{scanError}</p>
           <button
             type="button"
             onClick={() => { onReset(); inputRef.current?.click(); }}
@@ -92,7 +101,7 @@ export function QrScanner({ scanning, scannedText, scanError, onScan, onReset }:
       {/* Scan result */}
       {scannedText && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-white/5 border border-[var(--color-border)] p-4">
+          <div className="rounded-2xl bg-black/5 border border-[var(--color-border)] p-4">
             <p className="text-xs text-[var(--color-foreground-subtle)] mb-2">解码结果</p>
             <p className="text-sm text-[var(--color-foreground)] break-all select-all whitespace-pre-wrap">
               {scannedText}
@@ -110,7 +119,7 @@ export function QrScanner({ scanning, scannedText, scanError, onScan, onReset }:
             <button
               type="button"
               onClick={() => { onReset(); }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 text-[var(--color-foreground-muted)] text-sm hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black/5 text-[var(--color-foreground-muted)] text-sm hover:bg-black/10 transition-colors"
             >
               继续扫描
             </button>

@@ -193,8 +193,18 @@ export function useGroupChat(): UseGroupChatReturn {
     setError("");
     setConnStatus("connecting");
 
-    const host = hostname || window.location.hostname;
-    const url = `ws://${host}:3002`;
+    // 关闭已有的连接，防止泄漏
+    if (wsRef.current) {
+      wsRef.current.onopen = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    const host = hostname || window.location.host;
+    const url = `ws://${host}/ws/chat`;
 
     const ws = new WebSocket(url);
     let initialRoomListReceived = false;

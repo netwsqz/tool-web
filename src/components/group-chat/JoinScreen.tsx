@@ -38,33 +38,35 @@ export function JoinScreen({
 
       <div className="space-y-3">
         <div>
-          <label className="block text-xs text-[var(--color-text-secondary)] mb-1">
+          <label htmlFor="chat-nickname" className="block text-xs text-[var(--color-text-secondary)] mb-1">
             你的昵称
           </label>
           <input
             type="text"
+            id="chat-nickname"
             value={nickname}
             onChange={(e) => onNicknameChange(e.target.value)}
             placeholder="输入昵称"
             maxLength={10}
-            className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10
-              text-sm text-white placeholder-[var(--color-text-secondary)]
+            className="w-full px-3 py-2 rounded-xl bg-black/5 border border-black/10
+              text-sm text-[var(--color-foreground)] placeholder-[var(--color-text-secondary)]
               focus:outline-none focus:border-[var(--color-accent)] transition-colors"
             onKeyDown={(e) => e.key === "Enter" && handleConnect()}
           />
         </div>
         <div>
-          <label className="block text-xs text-[var(--color-text-secondary)] mb-1">
+          <label htmlFor="chat-server" className="block text-xs text-[var(--color-text-secondary)] mb-1">
             服务器地址
           </label>
           <div className="flex gap-2">
             <input
               type="text"
+              id="chat-server"
               value={serverAddress}
               onChange={(e) => onServerAddressChange(e.target.value)}
               placeholder="默认自动检测 (留空即可)"
-              className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10
-                text-sm text-white placeholder-[var(--color-text-secondary)]
+              className="flex-1 px-3 py-2 rounded-xl bg-black/5 border border-black/10
+                text-sm text-[var(--color-foreground)] placeholder-[var(--color-text-secondary)]
                 focus:outline-none focus:border-[var(--color-accent)] transition-colors"
               onKeyDown={(e) => e.key === "Enter" && handleConnect()}
             />
@@ -84,7 +86,7 @@ export function JoinScreen({
       </div>
 
       <p className="mt-4 text-xs text-[var(--color-text-secondary)] text-center">
-        请先启动聊天服务器: npm run chat-server
+        请先启动统一开发服务器: npm run dev
       </p>
     </div>
   );

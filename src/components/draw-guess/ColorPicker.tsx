@@ -27,6 +27,7 @@ export function ColorPicker({ color, onChange }: ColorPickerProps) {
         <button
           key={c}
           type="button"
+          aria-label={`颜色 ${c}`}
           title={c}
           className={`w-5 h-5 rounded-full border-2 transition-all ${
             c === color
@@ -44,7 +45,7 @@ export function ColorPicker({ color, onChange }: ColorPickerProps) {
           onChange={(e) => onChange(e.target.value)}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
-        <div className="w-full h-full rounded-full border border-white/20 bg-gradient-to-br from-pink-400 via-purple-400 to-cyan-400" />
+        <div className="w-full h-full rounded-full border border-black/20 bg-gradient-to-br from-pink-400 via-purple-400 to-cyan-400" />
       </label>
     </div>
   );

@@ -79,7 +79,7 @@ export function VideoAudioMerge({
           ${
             canStart
               ? "bg-[var(--color-accent)] text-white hover:opacity-90"
-              : "bg-white/5 text-[var(--color-text-secondary)] cursor-not-allowed"
+              : "bg-black/5 text-[var(--color-text-secondary)] cursor-not-allowed"
           }`}
       >
         {disabled

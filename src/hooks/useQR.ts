@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import QRCode from "qrcode";
-import QrScanner from "qr-scanner";
 import type {
   QRGeneratorType,
   WifiConfig,
@@ -90,6 +89,7 @@ export function useQR() {
     setScanError(null);
     setScannedText(null);
     try {
+      const QrScanner = (await import("qr-scanner")).default;
       const result = await QrScanner.scanImage(file, {
         returnDetailedScanResult: true,
       });

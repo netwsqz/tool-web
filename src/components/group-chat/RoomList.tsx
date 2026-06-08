@@ -44,9 +44,10 @@ export function RoomList({ rooms, currentRoomId, onJoin, onCreate }: Props) {
             value={newRoomName}
             onChange={(e) => setNewRoomName(e.target.value)}
             placeholder="聊天室名称"
+            aria-label="聊天室名称"
             maxLength={20}
-            className="flex-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10
-              text-sm text-white placeholder-[var(--color-text-secondary)]
+            className="flex-1 px-3 py-1.5 rounded-xl bg-black/5 border border-black/10
+              text-sm text-[var(--color-foreground)] placeholder-[var(--color-text-secondary)]
               focus:outline-none focus:border-[var(--color-accent)] transition-colors"
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
@@ -79,8 +80,8 @@ export function RoomList({ rooms, currentRoomId, onJoin, onCreate }: Props) {
             className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl
               text-sm transition-colors text-left
               ${room.id === currentRoomId
-                ? "bg-[var(--color-accent)]/10 text-white"
-                : "hover:bg-white/5 text-[var(--color-text-primary)]"
+                ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
+                : "hover:bg-black/5 text-[var(--color-text-primary)]"
               }`}
           >
             <span className="font-medium">{room.name}</span>

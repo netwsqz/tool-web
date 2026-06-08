@@ -28,7 +28,7 @@ export default function QRCodePage() {
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             tab === "generate"
               ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
-              : "bg-white/5 text-[var(--color-foreground-muted)] hover:bg-white/10"
+              : "bg-black/5 text-[var(--color-foreground-muted)] hover:bg-black/10"
           }`}
         >
           生成
@@ -39,7 +39,7 @@ export default function QRCodePage() {
           className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
             tab === "scan"
               ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
-              : "bg-white/5 text-[var(--color-foreground-muted)] hover:bg-white/10"
+              : "bg-black/5 text-[var(--color-foreground-muted)] hover:bg-black/10"
           }`}
         >
           扫描

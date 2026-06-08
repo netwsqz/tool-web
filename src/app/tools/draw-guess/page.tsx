@@ -80,7 +80,7 @@ export default function DrawGuessPage() {
     (code: string, name: string) => {
       setError("");
       setConnStatus("connecting");
-      const url = `ws://${window.location.hostname}:3001`;
+      const url = `ws://${window.location.host}/ws/draw-guess`;
 
       const ws = new WebSocket(url);
       ws.onopen = () => {
@@ -158,7 +158,7 @@ export default function DrawGuessPage() {
   const handleGuess = useCallback((text: string) => sendWsMessage({ type: "guess", text }), [sendWsMessage]);
 
   const timerPercent = timeLeft > 0 ? (timeLeft / totalTime) * 100 : 0;
-  const timerColor = timerPercent > 50 ? "bg-green-500" : timerPercent > 25 ? "bg-yellow-500" : "bg-red-500";
+  const timerColor = timerPercent > 50 ? "bg-[var(--color-success)]" : timerPercent > 25 ? "bg-[var(--color-warning)]" : "bg-[var(--color-destructive)]";
   const isMyTurn = mode === "multiplayer" && playerId === drawerId && gamePhase === "drawing";
   const isGuessing = mode === "multiplayer" && gamePhase === "drawing" && playerId !== drawerId;
 
@@ -170,16 +170,16 @@ export default function DrawGuessPage() {
       maxWidth="full"
     >
       {/* Mode Tabs */}
-      <div className="flex gap-1 mb-6 bg-white/5 rounded-xl p-1 w-fit">
-        <button type="button"
+      <div className="flex gap-1 mb-6 bg-[var(--color-surface-active)] rounded-xl p-1 w-fit" role="tablist">
+        <button type="button" role="tab" aria-selected={mode === "free-draw"}
           className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            mode === "free-draw" ? "bg-white/10 text-white" : "text-[var(--color-foreground-muted)] hover:text-white"
+            mode === "free-draw" ? "bg-[var(--color-surface)] text-[var(--color-foreground)]" : "text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
           }`} onClick={() => setMode("free-draw")}>
           自由画板
         </button>
-        <button type="button"
+        <button type="button" role="tab" aria-selected={mode === "multiplayer"}
           className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            mode === "multiplayer" ? "bg-white/10 text-white" : "text-[var(--color-foreground-muted)] hover:text-white"
+            mode === "multiplayer" ? "bg-[var(--color-surface)] shadow-sm text-[var(--color-foreground)]" : "text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
           }`} onClick={() => setMode("multiplayer")}>
           联机游戏
         </button>
@@ -187,9 +187,9 @@ export default function DrawGuessPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-4 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 text-sm flex items-center justify-between">
+        <div role="alert" className="mb-4 px-4 py-2 rounded-xl bg-[var(--color-destructive)]/20 text-[var(--color-destructive)] text-sm flex items-center justify-between">
           <span>{error}</span>
-          <button type="button" className="text-red-300 hover:text-red-200 ml-2" onClick={() => setError("")}>✕</button>
+          <button type="button" className="text-[var(--color-destructive)]/70 hover:text-[var(--color-destructive)] ml-2" onClick={() => setError("")} aria-label="关闭错误">✕</button>
         </div>
       )}
 
@@ -213,18 +213,18 @@ export default function DrawGuessPage() {
           <h2 className="text-base font-semibold mb-4">加入房间</h2>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs text-[var(--color-foreground-muted)] mb-1">昵称</label>
-              <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)}
+              <label htmlFor="draw-guess-nickname" className="block text-xs text-[var(--color-foreground-muted)] mb-1">昵称</label>
+              <input type="text" id="draw-guess-nickname" value={nickname} onChange={(e) => setNickname(e.target.value)}
                 placeholder="输入你的昵称" maxLength={10}
-                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white
+                className="w-full px-3 py-2 rounded-xl bg-black/5 border border-black/10 text-sm text-[var(--color-foreground)]
                   placeholder-[var(--color-foreground-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-colors" />
             </div>
             <div>
-              <label className="block text-xs text-[var(--color-foreground-muted)] mb-1">房间号</label>
+              <label htmlFor="draw-guess-room" className="block text-xs text-[var(--color-foreground-muted)] mb-1">房间号</label>
               <div className="flex gap-2">
-                <input type="text" value={joinRoomCode} onChange={(e) => setJoinRoomCode(e.target.value.toUpperCase())}
+                <input type="text" id="draw-guess-room" value={joinRoomCode} onChange={(e) => setJoinRoomCode(e.target.value.toUpperCase())}
                   placeholder="例如 ABCD" maxLength={4}
-                  className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white
+                  className="flex-1 px-3 py-2 rounded-xl bg-black/5 border border-black/10 text-sm text-[var(--color-foreground)]
                     placeholder-[var(--color-foreground-muted)] uppercase tracking-widest text-center font-mono
                     focus:outline-none focus:border-[var(--color-accent)] transition-colors" />
                 <button type="button" disabled={!nickname.trim() || joinRoomCode.length < 4}
@@ -236,14 +236,14 @@ export default function DrawGuessPage() {
               </div>
             </div>
             <div className="relative py-2">
-              <div className="border-t border-white/10" />
+              <div className="border-t border-black/10" />
               <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs text-[var(--color-foreground-muted)] bg-[var(--color-bg-deep)]">
                 或者
               </span>
             </div>
             <button type="button" disabled={!nickname.trim()}
-              className="w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-white/10 text-white
-                hover:bg-white/15 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2.5 rounded-xl text-sm font-medium bg-black/10 text-[var(--color-foreground)]
+                hover:bg-black/15 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               onClick={() => {
                 const code = Math.random().toString(36).substring(2, 6).toUpperCase();
                 setJoinRoomCode(code); connectWs(code, nickname.trim());
@@ -252,7 +252,7 @@ export default function DrawGuessPage() {
             </button>
           </div>
           <p className="mt-4 text-xs text-[var(--color-foreground-muted)] text-center">
-            请先启动 WebSocket 服务器: node server/ws-server.mjs
+            请先启动统一开发服务器: npm run dev
           </p>
         </div>
       )}
@@ -269,7 +269,7 @@ export default function DrawGuessPage() {
         <div className="space-y-4">
           <div className="glass rounded-2xl px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-mono tracking-widest px-2 py-1 rounded-lg bg-white/10">{roomCode}</span>
+              <span className="text-xs font-mono tracking-widest px-2 py-1 rounded-lg bg-black/10">{roomCode}</span>
               <span className="text-sm text-[var(--color-foreground-muted)]">{players.length} 人在线</span>
             </div>
             <div className="flex items-center gap-2">
@@ -281,7 +281,7 @@ export default function DrawGuessPage() {
               )}
               {gamePhase === "drawing" && <span className="text-sm">{currentRound}/{totalRounds} 轮</span>}
               <button type="button"
-                className="px-3 py-1.5 rounded-xl text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                className="px-3 py-1.5 rounded-xl text-xs font-medium text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10 transition-colors"
                 onClick={() => { sendWsMessage({ type: "leave" }); wsRef.current?.close(); wsRef.current = null; setConnStatus("disconnected"); setPlayers([]); setGamePhase("lobby"); setMessages([]); }}>
                 退出
               </button>
@@ -289,7 +289,7 @@ export default function DrawGuessPage() {
           </div>
 
           {gamePhase === "drawing" && (
-            <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+            <div className="h-2 rounded-full bg-black/5 overflow-hidden">
               <div className={`h-full rounded-full transition-all duration-1000 ease-linear ${timerColor}`}
                 style={{ width: `${timerPercent}%` }} />
             </div>
@@ -314,10 +314,10 @@ export default function DrawGuessPage() {
               {gamePhase === "game-over" && (
                 <div className="text-center space-y-4">
                   <h2 className="text-lg font-semibold">游戏结束！</h2>
-                  <p className="text-2xl font-bold text-yellow-400">🏆 {winnerName}</p>
+                  <p className="text-2xl font-bold text-[var(--color-warning)]">🏆 {winnerName}</p>
                   <div className="max-w-xs mx-auto">
                     {players.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between px-4 py-2 rounded-xl bg-white/5 mt-1">
+                      <div key={p.id} className="flex items-center justify-between px-4 py-2 rounded-xl bg-black/5 mt-1">
                         <span>{p.name}{p.id === Object.entries(gameOverScores).sort((a, b) => b[1] - a[1])[0]?.[0] && " 👑"}</span>
                         <span className="text-[var(--color-accent)] font-medium">{p.score}分</span>
                       </div>
@@ -355,7 +355,7 @@ export default function DrawGuessPage() {
                   <ChatArea messages={messages} myPlayerId={playerId} />
                 </div>
                 {isGuessing && <div className="shrink-0"><GuessInput onGuess={handleGuess} /></div>}
-                {isMyTurn && <div className="shrink-0"><p className="text-xs text-yellow-400 text-center">你正在画图，等待大家猜测...</p></div>}
+                {isMyTurn && <div className="shrink-0"><p className="text-xs text-[var(--color-warning)] text-center">你正在画图，等待大家猜测...</p></div>}
               </div>
             </div>
           )}

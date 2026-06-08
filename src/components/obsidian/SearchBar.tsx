@@ -68,9 +68,10 @@ export function SearchBar({
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="搜索笔记…"
-          className="w-full pl-9 pr-3 py-2 text-sm bg-white/5 rounded-xl
+          aria-label="搜索笔记"
+          className="w-full pl-9 pr-3 py-2 text-sm bg-black/5 rounded-xl
             text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)]
-            outline-none border border-white/5 focus:border-[var(--color-accent)]/40
+            outline-none border border-black/5 focus:border-[var(--color-accent)]/40
             transition-colors"
         />
         {isSearching && (
@@ -82,7 +83,7 @@ export function SearchBar({
 
       {showDropdown && (
         <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-64 overflow-y-auto
-          glass rounded-xl border border-white/10 shadow-xl">
+          glass rounded-xl border border-black/10 shadow-xl">
           {results.length === 0 && !isSearching ? (
             <p className="px-3 py-3 text-xs text-[var(--color-text-secondary)] text-center">
               未找到匹配内容
@@ -97,7 +98,7 @@ export function SearchBar({
                 }}
                 onMouseEnter={() => setFocusIdx(i)}
                 className={`w-full text-left px-3 py-2.5 text-sm transition-colors
-                  ${i === focusIdx ? "bg-white/10" : "hover:bg-white/5"}`}
+                  ${i === focusIdx ? "bg-black/10" : "hover:bg-black/5"}`}
               >
                 <div className="text-[var(--color-text-primary)] truncate">
                   {r.file.title}

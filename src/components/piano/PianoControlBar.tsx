@@ -37,7 +37,7 @@ export function PianoControlBar({
   return (
     <div className="flex flex-wrap items-center gap-4">
       {/* Instrument selector */}
-      <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5">
+      <div className="flex gap-0.5 bg-black/5 rounded-lg p-0.5">
         {INSTRUMENTS.map(({ key, label }) => (
           <button
             key={key}
@@ -45,7 +45,7 @@ export function PianoControlBar({
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
               instrument === key
                 ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
-                : "text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-white/5"
+                : "text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-black/5"
             }`}
           >
             {label}
@@ -83,7 +83,7 @@ export function PianoControlBar({
           value={volume}
           onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
           className="w-24 h-1.5 rounded-full appearance-none cursor-pointer
-            bg-white/10 accent-[var(--color-accent)]
+            bg-black/10 accent-[var(--color-accent)]
             [&::-webkit-slider-thumb]:appearance-none
             [&::-webkit-slider-thumb]:size-3.5
             [&::-webkit-slider-thumb]:rounded-full
@@ -102,7 +102,7 @@ export function PianoControlBar({
         className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
           showLabels
             ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
-            : "bg-white/5 text-[var(--color-foreground-muted)] hover:bg-white/10"
+            : "bg-black/5 text-[var(--color-foreground-muted)] hover:bg-black/10"
         }`}
         title="显示键位标签"
       >
@@ -113,7 +113,7 @@ export function PianoControlBar({
       <button
         onClick={onClearAll}
         className="px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-          bg-white/5 text-[var(--color-foreground-muted)] hover:bg-red-500/20 hover:text-red-400"
+          bg-black/5 text-[var(--color-foreground-muted)] hover:bg-[var(--color-destructive)]/20 hover:text-[var(--color-destructive)]"
         title="一键静音（停止所有发声）"
       >
         ✕
@@ -121,7 +121,7 @@ export function PianoControlBar({
 
       {/* Recording placeholder */}
       <div className="flex items-center gap-1.5 opacity-40 cursor-not-allowed">
-        <span className="size-2 rounded-full bg-red-500" />
+        <span className="size-2 rounded-full bg-[var(--color-destructive)]" />
         <span className="text-xs text-[var(--color-foreground-muted)]">录音</span>
       </div>
 
@@ -133,7 +133,7 @@ export function PianoControlBar({
       </div>
 
       {/* MIDI placeholder */}
-      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/5 text-[var(--color-foreground-subtle)] opacity-40 cursor-not-allowed">
+      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/5 text-[var(--color-foreground-subtle)] opacity-40 cursor-not-allowed">
         MIDI
       </span>
     </div>

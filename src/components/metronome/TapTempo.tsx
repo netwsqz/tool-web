@@ -12,7 +12,7 @@ export function TapTempo({
       <button
         onClick={onTap}
         className="px-5 py-2 rounded-xl text-sm font-medium
-          bg-white/5 hover:bg-white/10 border border-white/10
+          bg-black/5 hover:bg-black/10 border border-black/10
           text-[var(--color-text-primary)]
           transition-all duration-150 active:scale-95 active:bg-[var(--color-accent)]/20"
       >

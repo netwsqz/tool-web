@@ -17,7 +17,7 @@ export function ChatArea({ messages, myPlayerId }: ChatAreaProps) {
 
   if (messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-sm text-[var(--color-text-secondary)]">
+      <div className="flex items-center justify-center h-32 text-sm text-[var(--color-foreground-muted)]">
         暂无消息
       </div>
     );
@@ -30,10 +30,10 @@ export function ChatArea({ messages, myPlayerId }: ChatAreaProps) {
           key={msg.id}
           className={`text-sm px-2 py-1 rounded-lg ${
             msg.isCorrect
-              ? "bg-green-500/20 text-green-400"
+              ? "bg-green-500/20 text-[var(--color-success)]"
               : msg.playerId === myPlayerId
-              ? "bg-blue-500/10 text-blue-300"
-              : "text-[var(--color-text-primary)]"
+              ? "bg-blue-500/10 text-[var(--color-accent)]"
+              : "text-[var(--color-foreground)]"
           }`}
         >
           <span className="font-medium text-xs opacity-70 mr-1.5">

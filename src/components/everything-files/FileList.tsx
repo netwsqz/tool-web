@@ -9,9 +9,10 @@ interface Props {
   error: string | null;
   onOpenFolder: (path: string) => void;
   onRefresh: () => void;
+  onPreview?: (file: EverythingFileResult) => void;
 }
 
-export function FileList({ results, loading, error, onOpenFolder, onRefresh }: Props) {
+export function FileList({ results, loading, error, onOpenFolder, onRefresh, onPreview }: Props) {
   // Empty state
   if (!loading && !error && results.length === 0) {
     return (
@@ -26,7 +27,7 @@ export function FileList({ results, loading, error, onOpenFolder, onRefresh }: P
   // Error state
   if (error && results.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-red-400">
+      <div className="flex flex-col items-center justify-center py-20 text-[var(--color-destructive)]">
         <span className="text-4xl mb-4">⚠️</span>
         <p className="text-sm">{error}</p>
         <button
@@ -47,7 +48,7 @@ export function FileList({ results, loading, error, onOpenFolder, onRefresh }: P
         <span className="flex-1">名称</span>
         <span className="w-20 text-right flex-shrink-0">大小</span>
         <span className="w-36 text-right flex-shrink-0 hidden sm:block">修改日期</span>
-        <span className="w-8 flex-shrink-0" />
+        <span className="w-20 flex-shrink-0 text-center">操作</span>
       </div>
 
       {/* Rows */}
@@ -57,13 +58,14 @@ export function FileList({ results, loading, error, onOpenFolder, onRefresh }: P
             key={`${file.fullPath}-${i}`}
             file={file}
             onClick={() => onOpenFolder(file.fullPath)}
+            onPreview={onPreview ? () => onPreview(file) : undefined}
           />
         ))}
       </div>
 
       {/* Loading overlay */}
       {loading && (
-        <div className="absolute inset-0 bg-[var(--color-bg-primary)]/50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-[var(--color-bg-primary)]/50 flex items-center justify-center animate-fade-in">
           <div className="w-6 h-6 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
         </div>
       )}

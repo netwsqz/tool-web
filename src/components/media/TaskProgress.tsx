@@ -36,7 +36,7 @@ export function TaskProgress({
           {task.status === "completed" && (
             <span className="text-green-400 text-lg">✓</span>
           )}
-          {task.status === "failed" && <span className="text-red-400 text-lg">✗</span>}
+          {task.status === "failed" && <span className="text-[var(--color-destructive)] text-lg">✗</span>}
           {task.status === "cancelled" && (
             <span className="text-yellow-400 text-lg">⚠</span>
           )}
@@ -52,8 +52,8 @@ export function TaskProgress({
           {task.status === "running" && (
             <button
               onClick={onCancel}
-              className="text-xs px-3 py-1.5 rounded-lg border border-red-400/30 text-red-400
-                hover:bg-red-400/10 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg border border-[var(--color-destructive)]/30 text-[var(--color-destructive)]
+                hover:bg-[var(--color-destructive)]/10 transition-colors"
             >
               取消
             </button>
@@ -63,8 +63,8 @@ export function TaskProgress({
             task.status === "cancelled") && (
             <button
               onClick={onClear}
-              className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-[var(--color-text-secondary)]
-                hover:bg-white/5 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg border border-black/10 text-[var(--color-text-secondary)]
+                hover:bg-black/5 transition-colors"
             >
               重新开始
             </button>
@@ -74,10 +74,15 @@ export function TaskProgress({
 
       {/* Progress bar */}
       {(task.status === "running" || task.status === "pending") && (
-        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[var(--color-accent)] to-blue-400 rounded-full
+            className="h-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] rounded-full
               transition-all duration-500 ease-out"
+            role="progressbar"
+            aria-valuenow={Math.round(task.progress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="处理进度"
             style={{ width: `${Math.max(task.progress, 2)}%` }}
           />
         </div>
@@ -112,7 +117,7 @@ export function TaskProgress({
 
       {/* Failed: error message */}
       {task.status === "failed" && task.error && (
-        <div className="text-xs text-red-400 bg-red-400/10 px-3 py-2 rounded-xl">
+        <div className="text-xs text-[var(--color-destructive)] bg-[var(--color-destructive)]/10 px-3 py-2 rounded-xl">
           {task.error}
         </div>
       )}

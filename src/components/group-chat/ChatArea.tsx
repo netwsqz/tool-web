@@ -38,7 +38,7 @@ export function ChatArea({ messages, myMemberId, typingMembers, memberNames, loa
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-1 py-2">
+    <div className="flex-1 overflow-y-auto px-1 py-2" role="log" aria-live="polite">
       {messages.map((msg) => (
         <MessageBubble
           key={msg.id}

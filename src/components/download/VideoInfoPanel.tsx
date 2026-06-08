@@ -26,7 +26,7 @@ export function VideoInfoPanel({
             }}
           />
         ) : (
-          <div className="w-40 aspect-[16/10] rounded-xl bg-white/5 flex items-center justify-center
+          <div className="w-40 aspect-[16/10] rounded-xl bg-black/5 flex items-center justify-center
             text-2xl text-[var(--color-text-secondary)]">
             🎬
           </div>

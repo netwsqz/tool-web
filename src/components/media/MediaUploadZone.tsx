@@ -80,20 +80,29 @@ export function MediaUploadZone({
       )}
 
       <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-label={`点击或拖放${label}`}
         onDrop={handleDrop}
         onDragOver={(e) => {
           e.preventDefault();
           if (!disabled) setDragging(true);
         }}
         onDragLeave={() => setDragging(false)}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && !disabled) {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
         onClick={disabled ? undefined : handleClick}
         className={`glass rounded-2xl p-6 text-center transition-all duration-200
           ${
             disabled
               ? "opacity-40 cursor-not-allowed"
-              : "cursor-pointer hover:bg-white/8"
+              : "cursor-pointer hover:bg-black/8"
           }
-          ${dragging ? "scale-[1.02] bg-white/10 border-[var(--color-accent)]" : ""}
+          ${dragging ? "scale-[1.02] bg-black/10 border-[var(--color-accent)]" : ""}
           ${uploading ? "pointer-events-none" : ""}
         `}
       >
@@ -130,7 +139,7 @@ export function MediaUploadZone({
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-400/10 px-3 py-1.5 rounded-lg">
+        <p className="text-xs text-[var(--color-destructive)] bg-[var(--color-destructive)]/10 px-3 py-1.5 rounded-lg">
           {error}
         </p>
       )}

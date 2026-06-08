@@ -27,7 +27,7 @@ export function DiskCard({ disk }: Props) {
                   <span className="text-[var(--color-text-primary)]">{d.mount}</span>
                   <span className="font-mono text-sm">{percent}%</span>
                 </div>
-                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-2 bg-black/5 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-[var(--color-accent)] rounded-full transition-all duration-700"
                     style={{ width: `${percent}%` }}

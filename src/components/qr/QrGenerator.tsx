@@ -1,6 +1,7 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { useState } from "react";
+import { Download, ChevronDown } from "lucide-react";
 import type { QRGeneratorType, WifiConfig, VCardConfig } from "@/types/qr";
 
 interface QrGeneratorProps {
@@ -29,6 +30,14 @@ export function QrGenerator({
   vcard, onVcardChange,
   qrDataUrl, genError,
 }: QrGeneratorProps) {
+  const [openSelect, setOpenSelect] = useState(false);
+  const encryptionOptions: { value: WifiConfig["encryption"]; label: string }[] = [
+    { value: "WPA2", label: "WPA2" },
+    { value: "WPA", label: "WPA" },
+    { value: "WEP", label: "WEP" },
+    { value: "none", label: "无加密" },
+  ];
+
   const handleDownload = () => {
     if (!qrDataUrl) return;
     const a = document.createElement("a");
@@ -49,7 +58,7 @@ export function QrGenerator({
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               genType === opt.value
                 ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
-                : "bg-white/5 text-[var(--color-foreground-muted)] hover:bg-white/10"
+                : "bg-black/5 text-[var(--color-foreground-muted)] hover:bg-black/10"
             }`}
           >
             {opt.label}
@@ -65,7 +74,7 @@ export function QrGenerator({
             onChange={(e) => onTextChange(e.target.value)}
             placeholder="输入文本或网址…"
             rows={4}
-            className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] resize-none focus:outline-none focus:border-[var(--color-accent)]/40"
+            className="w-full rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] resize-none focus:outline-none focus:border-[var(--color-accent)]/40"
           />
         )}
 
@@ -75,25 +84,50 @@ export function QrGenerator({
               value={wifi.ssid}
               onChange={(e) => onWifiChange({ ...wifi, ssid: e.target.value })}
               placeholder="WiFi 名称 (SSID)"
-              className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
+              aria-label="WiFi 名称"
+              className="w-full rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
             />
             <input
               value={wifi.password}
               onChange={(e) => onWifiChange({ ...wifi, password: e.target.value })}
               placeholder="密码（可选）"
               type="password"
-              className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
+              aria-label="WiFi 密码"
+              className="w-full rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
             />
-            <select
-              value={wifi.encryption}
-              onChange={(e) => onWifiChange({ ...wifi, encryption: e.target.value as WifiConfig["encryption"] })}
-              className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-accent)]/40"
-            >
-              <option value="WPA2">WPA2</option>
-              <option value="WPA">WPA</option>
-              <option value="WEP">WEP</option>
-              <option value="none">无加密</option>
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenSelect(!openSelect)}
+                onBlur={() => setOpenSelect(false)}
+                className="w-full flex items-center justify-between rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-accent)]/40"
+              >
+                <span>{encryptionOptions.find((o) => o.value === wifi.encryption)?.label}</span>
+                <ChevronDown className={`size-4 text-[var(--color-foreground-muted)] transition-transform ${openSelect ? "rotate-180" : ""}`} />
+              </button>
+              {openSelect && (
+                <div className="absolute z-10 mt-1 w-full rounded-xl bg-[var(--color-bg-elevated)] border border-[var(--color-border)] shadow-lg overflow-hidden">
+                  {encryptionOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onWifiChange({ ...wifi, encryption: opt.value });
+                        setOpenSelect(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        wifi.encryption === opt.value
+                          ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
+                          : "text-[var(--color-foreground)] hover:bg-black/5"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -103,26 +137,30 @@ export function QrGenerator({
               value={vcard.name}
               onChange={(e) => onVcardChange({ ...vcard, name: e.target.value })}
               placeholder="姓名"
-              className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
+              aria-label="姓名"
+              className="w-full rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
             />
             <input
               value={vcard.tel}
               onChange={(e) => onVcardChange({ ...vcard, tel: e.target.value })}
               placeholder="电话"
-              className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
+              aria-label="电话"
+              className="w-full rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
             />
             <input
               value={vcard.email}
               onChange={(e) => onVcardChange({ ...vcard, email: e.target.value })}
               placeholder="邮箱"
               type="email"
-              className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
+              aria-label="邮箱"
+              className="w-full rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
             />
             <input
               value={vcard.org}
               onChange={(e) => onVcardChange({ ...vcard, org: e.target.value })}
               placeholder="公司"
-              className="w-full rounded-xl bg-white/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
+              aria-label="公司"
+              className="w-full rounded-xl bg-black/5 border border-[var(--color-border)] px-4 py-3 text-sm text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-accent)]/40"
             />
           </>
         )}
@@ -130,7 +168,7 @@ export function QrGenerator({
 
       {/* Error */}
       {genError && (
-        <div className="px-4 py-2 rounded-xl bg-red-500/20 text-red-400 text-sm">
+        <div className="px-4 py-2 rounded-xl bg-[var(--color-destructive)]/20 text-[var(--color-destructive)] text-sm">
           {genError}
         </div>
       )}

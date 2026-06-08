@@ -31,14 +31,14 @@ export function ToolBar({
   return (
     <div className="flex flex-wrap items-center gap-3">
       {/* Pen / Eraser */}
-      <div className="flex rounded-xl bg-white/5 p-1 gap-0.5">
+      <div className="flex rounded-xl bg-black/5 p-1 gap-0.5">
         <button
           type="button"
           disabled={disabled}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             tool === "pen"
-              ? "bg-white/10 text-white"
-              : "text-[var(--color-text-secondary)] hover:text-white"
+              ? "bg-black/10 text-[var(--color-foreground)]"
+              : "text-[var(--color-text-secondary)] hover:text-[var(--color-foreground)]"
           }`}
           onClick={() => onToolChange("pen")}
         >
@@ -49,8 +49,8 @@ export function ToolBar({
           disabled={disabled}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             tool === "eraser"
-              ? "bg-white/10 text-white"
-              : "text-[var(--color-text-secondary)] hover:text-white"
+              ? "bg-black/10 text-[var(--color-foreground)]"
+              : "text-[var(--color-text-secondary)] hover:text-[var(--color-foreground)]"
           }`}
           onClick={() => onToolChange("eraser")}
         >
@@ -59,13 +59,13 @@ export function ToolBar({
       </div>
 
       {/* Divider */}
-      <div className="hidden sm:block w-px h-6 bg-white/10" />
+      <div className="hidden sm:block w-px h-6 bg-black/10" />
 
       {/* Colors */}
       <ColorPicker color={color} onChange={onColorChange} />
 
       {/* Divider */}
-      <div className="hidden sm:block w-px h-6 bg-white/10" />
+      <div className="hidden sm:block w-px h-6 bg-black/10" />
 
       {/* Brush size */}
       <div className="flex items-center gap-2">
@@ -79,12 +79,13 @@ export function ToolBar({
           value={brushSize}
           onChange={(e) => onBrushSizeChange(Number(e.target.value))}
           disabled={disabled}
+          aria-label="画笔大小"
           className="w-20 h-1 accent-[var(--color-accent)] cursor-pointer"
         />
       </div>
 
       {/* Divider */}
-      <div className="hidden sm:block w-px h-6 bg-white/10" />
+      <div className="hidden sm:block w-px h-6 bg-black/10" />
 
       {/* Actions */}
       <div className="flex gap-1">
@@ -92,7 +93,7 @@ export function ToolBar({
           type="button"
           disabled={disabled || !canUndo}
           className="px-3 py-1.5 rounded-lg text-xs font-medium
-            text-[var(--color-text-secondary)] hover:text-white
+            text-[var(--color-text-secondary)] hover:text-[var(--color-foreground)]
             disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           onClick={onUndo}
         >
@@ -102,7 +103,7 @@ export function ToolBar({
           type="button"
           disabled={disabled}
           className="px-3 py-1.5 rounded-lg text-xs font-medium
-            text-red-400 hover:text-red-300
+            text-[var(--color-destructive)] hover:text-[var(--color-destructive)]
             disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           onClick={onClear}
         >

@@ -22,6 +22,7 @@ export function StatusBar({ totalResults, offset, count, elapsed, onPageChange }
           <button
             disabled={offset === 0}
             onClick={() => onPageChange(0)}
+            aria-label="首页"
             className="disabled:opacity-30 hover:text-[var(--color-accent)] transition-colors"
           >
             ««
@@ -29,6 +30,7 @@ export function StatusBar({ totalResults, offset, count, elapsed, onPageChange }
           <button
             disabled={offset === 0}
             onClick={() => onPageChange(Math.max(0, offset - count))}
+            aria-label="上一页"
             className="disabled:opacity-30 hover:text-[var(--color-accent)] transition-colors"
           >
             «
@@ -39,6 +41,7 @@ export function StatusBar({ totalResults, offset, count, elapsed, onPageChange }
           <button
             disabled={offset + count >= totalResults}
             onClick={() => onPageChange(offset + count)}
+            aria-label="下一页"
             className="disabled:opacity-30 hover:text-[var(--color-accent)] transition-colors"
           >
             »
@@ -46,6 +49,7 @@ export function StatusBar({ totalResults, offset, count, elapsed, onPageChange }
           <button
             disabled={offset + count >= totalResults}
             onClick={() => onPageChange(Math.floor(totalResults / count) * count)}
+            aria-label="末页"
             className="disabled:opacity-30 hover:text-[var(--color-accent)] transition-colors"
           >
             »»

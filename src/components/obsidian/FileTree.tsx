@@ -39,7 +39,7 @@ export function FileTree({
               ${
                 isActive
                   ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
-                  : "text-[var(--color-text-primary)] hover:bg-white/5"
+                  : "text-[var(--color-text-primary)] hover:bg-black/5"
               }`}
             onClick={() => onSelect(file.path)}
           >
@@ -51,8 +51,8 @@ export function FileTree({
                 if (confirm(`确认删除「${file.title}」？`)) onDelete(file.path);
               }}
               className="opacity-0 group-hover:opacity-100 text-xs px-1.5 py-0.5
-                rounded-lg text-[var(--color-text-secondary)] hover:text-red-400
-                hover:bg-white/10 transition-all"
+                rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-destructive)]
+                hover:bg-black/10 transition-all"
             >
               ×
             </button>

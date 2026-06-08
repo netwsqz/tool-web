@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 
 /**
@@ -9,6 +10,7 @@ import { Sidebar } from "./Sidebar";
  * for an immersive, spatial feel.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const rafRef = useRef<number>(0);
   const targetRef = useRef({ x: 0.5, y: 0.5 });
   const currentRef = useRef({ x: 0.5, y: 0.5 });
@@ -22,6 +24,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       document.body.style.setProperty("--glow-sec-y", "80%");
     }
   }, []);
+
+  // ESC key closes sidebar on mobile
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && sidebarOpen) setSidebarOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [sidebarOpen]);
+
+  // Body scroll lock when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     targetRef.current = {
@@ -41,15 +62,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     cx.y += (tx.y - cx.y) * 0.05;
 
     if (typeof document !== "undefined") {
-      // Shift the primary glow hotspot with cursor — wide range for visible effect
-      const baseX = 15 + (cx.x - 0.5) * 40;  // -5%–35%
-      const baseY = 5 + (cx.y - 0.5) * 30;    // -10%–20%
+      // Shift the primary glow hotspot with cursor 鈥?wide range for visible effect
+      const baseX = 15 + (cx.x - 0.5) * 40;  // -5%鈥?5%
+      const baseY = 5 + (cx.y - 0.5) * 30;    // -10%鈥?0%
       document.body.style.setProperty("--glow-x", `${baseX}%`);
       document.body.style.setProperty("--glow-y", `${baseY}%`);
 
-      // Secondary glow moves opposite — trailing glow
-      const secX = 80 + (0.5 - cx.x) * 60;    // 20%–140%
-      const secY = 80 + (0.5 - cx.y) * 40;    // 40%–120%
+      // Secondary glow moves opposite 鈥?trailing glow
+      const secX = 80 + (0.5 - cx.x) * 60;    // 20%鈥?40%
+      const secY = 80 + (0.5 - cx.y) * 40;    // 40%鈥?20%
       document.body.style.setProperty("--glow-sec-x", `${secX}%`);
       document.body.style.setProperty("--glow-sec-y", `${secY}%`);
     }
@@ -62,6 +83,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
   return (
     <div className="flex min-h-screen" onMouseMove={handleMouseMove}>
       {/* Skip to content 鈥?accessibility */}
@@ -72,13 +95,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         璺冲埌涓昏鍐呭
       </a>
 
-      {/* Floating island sidebar */}
-      <Sidebar />
+      {/* Backdrop overlay 鈥?mobile only */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+          sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={closeSidebar}
+        aria-hidden="true"
+      />
 
-      {/* Main content — full width since sidebar floats above */}
+      {/* Mobile toggle button */}
+      <button
+        onClick={() => setSidebarOpen((o) => !o)}
+
+        className="fixed top-3 left-3 z-[51] size-9 flex items-center justify-center rounded-lg glass-low hover:bg-[var(--color-surface-hover)] transition-colors duration-200 lg:hidden"
+        aria-label={sidebarOpen ? "鍏抽棴瀵艰埅" : "鎵撳紑瀵艰埅"}
+      >
+        {sidebarOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+      </button>
+
+      {/* Floating island sidebar */}
+      <Sidebar open={sidebarOpen} onClose={closeSidebar} />
+
+      {/* Main content 鈥?full width since sidebar floats above */}
       <main
         id="main-content"
-        className="flex-1 min-w-0 relative z-10 pt-12 lg:pl-20 lg:pt-0"
+
+        className="flex-1 min-w-0 relative z-10 pt-12 lg:pl-[calc(var(--sidebar-width)+16px)] lg:pt-0"
       >
         {children}
       </main>

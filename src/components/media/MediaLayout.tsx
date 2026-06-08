@@ -32,12 +32,13 @@ export function MediaLayout() {
     <div className="space-y-6">
       {/* Error banner */}
       {error && (
-        <div className="glass rounded-2xl p-4 border border-red-400/20">
+        <div role="alert" className="glass rounded-2xl p-4 border border-[var(--color-destructive)]/20">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-red-400">{error}</span>
+            <span className="text-sm text-[var(--color-destructive)]">{error}</span>
             <button
               onClick={() => setError(null)}
-              className="text-red-400/60 hover:text-red-400 text-lg leading-none"
+              aria-label="关闭错误"
+              className="text-[var(--color-destructive)]/60 hover:text-[var(--color-destructive)] text-lg leading-none"
             >
               ×
             </button>
@@ -46,7 +47,7 @@ export function MediaLayout() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="tablist">
         {TABS.map((tab) => (
           <MediaTabButton
             key={tab.id}

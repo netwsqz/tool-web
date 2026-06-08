@@ -128,15 +128,17 @@ export function DownloadLayout() {
       {/* Error banner */}
       {(error || parseError) && (
         <div
-          className="glass rounded-2xl p-4 border border-red-400/20 flex items-center justify-between"
+          role="alert"
+          className="glass rounded-2xl p-4 border border-[var(--color-destructive)]/20 flex items-center justify-between"
         >
-          <span className="text-sm text-red-400">{error || parseError}</span>
+          <span className="text-sm text-[var(--color-destructive)]">{error || parseError}</span>
           <button
             onClick={() => {
               setError(null);
               clearMetadata();
             }}
-            className="text-red-400/60 hover:text-red-400 transition-colors ml-3 shrink-0"
+            aria-label="关闭错误"
+            className="text-[var(--color-destructive)]/60 hover:text-[var(--color-destructive)] transition-colors ml-3 shrink-0"
           >
             ✕
           </button>
@@ -144,15 +146,17 @@ export function DownloadLayout() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2" role="tablist">
         {TABS.map((tab) => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
                 ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30"
-                : "text-[var(--color-text-secondary)] hover:bg-white/5"
+                : "text-[var(--color-text-secondary)] hover:bg-black/5"
             }`}
           >
             {tab.label}
@@ -175,6 +179,7 @@ export function DownloadLayout() {
               <button
                 type="button"
                 role="switch"
+                aria-label="使用登录态"
                 aria-checked={useCookies || !!selectedBrowser}
                 onClick={() => {
                   if (!useCookies && !selectedBrowser && !cookiesFile) {
@@ -190,7 +195,7 @@ export function DownloadLayout() {
                   }
                 }}
                 className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
-                  useCookies || selectedBrowser ? "bg-[var(--color-accent)]" : "bg-white/20"
+                  useCookies || selectedBrowser ? "bg-[var(--color-accent)]" : "bg-black/20"
                 }`}
               >
                 <span
@@ -235,7 +240,7 @@ export function DownloadLayout() {
                       className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                         selectedBrowser === browser
                           ? "border-[var(--color-accent)]/50 bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-                          : "border-white/10 text-[var(--color-text-secondary)] hover:bg-white/5"
+                          : "border-black/10 text-[var(--color-text-secondary)] hover:bg-black/5"
                       }`}
                     >
                       {browserLabel(browser)}
@@ -277,8 +282,8 @@ export function DownloadLayout() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingCookie}
-                    className="ml-11 text-xs px-3 py-1.5 rounded-lg border border-white/10
-                      text-[var(--color-text-secondary)] hover:bg-white/5 transition-colors
+                    className="ml-11 text-xs px-3 py-1.5 rounded-lg border border-black/10
+                      text-[var(--color-text-secondary)] hover:bg-black/5 transition-colors
                       disabled:opacity-40"
                   >
                     {uploadingCookie ? "上传中…" : "选择 cookies.txt 文件"}

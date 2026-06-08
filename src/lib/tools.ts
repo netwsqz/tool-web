@@ -137,8 +137,8 @@ export const tools: ToolConfig[] = [
   },
   {
     id: "fruit-slice",
-    name: "水果忍者",
-    description: "切水果挑战 · 连击加分 · 避开炸弹",
+    name: "切水果",
+    description: "休闲解压 · 滑动切水果",
     icon: "Swords",
     path: "/tools/fruit-slice",
     status: "active",

@@ -67,8 +67,8 @@ export function Favorites({ favorites, currentPath, onBrowse, onAdd, onRemove }:
               </button>
               <button
                 onClick={() => onRemove(fav)}
-                className="opacity-0 group-hover:opacity-100 text-xs text-red-400
-                  hover:text-red-300 px-1 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 text-xs text-[var(--color-destructive)]
+                  hover:text-[var(--color-destructive)] px-1 transition-opacity"
                 title="移除收藏"
               >
                 ×

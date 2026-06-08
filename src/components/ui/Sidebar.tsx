@@ -1,59 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Upload,
-  FolderOpen,
-  Clapperboard,
-  Download,
-  Piano,
-  Disc3,
-  FileText,
-  Palette,
-  ListChecks,
-  ArrowLeftRight,
-  Monitor,
-  Timer,
-  MessageCircle,
-  Sparkles,
-  QrCode,
-  Swords,
-  Menu,
-  X,
-} from "lucide-react";
+import { Menu, X, Sparkles } from "lucide-react";
 import { tools } from "@/lib/tools";
 import type { ToolConfig } from "@/types";
+import { iconMap, categoryLabels } from "@/components/ui/iconMap";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Upload,
-  FolderOpen,
-  Clapperboard,
-  Download,
-  Piano,
-  Disc3,
-  FileText,
-  Palette,
-  QrCode,
-  ListChecks,
-  ArrowLeftRight,
-  Monitor,
-  Timer,
-  MessageCircle,
-  Sparkles,
-  Swords,
-};
-
-const categoryLabels: Record<string, string> = {
-  file: "文件工具",
-  media: "媒体工具",
-  creative: "创意工具",
-  system: "系统工具",
-};
-
-function ToolNavItem({ tool, active }: { tool: ToolConfig; active: boolean }) {
+function ToolNavItem({ tool, active, onClose }: { tool: ToolConfig; active: boolean; onClose: () => void }) {
   const Icon = tool.icon ? iconMap[tool.icon] : null;
 
   if (tool.status === "coming-soon") {
@@ -73,6 +29,7 @@ function ToolNavItem({ tool, active }: { tool: ToolConfig; active: boolean }) {
   return (
     <Link
       href={tool.path}
+      onClick={onClose}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200
         ${active
           ? "bg-[var(--color-accent)]/12 text-[var(--color-accent)] font-medium"
@@ -87,8 +44,9 @@ function ToolNavItem({ tool, active }: { tool: ToolConfig; active: boolean }) {
   );
 }
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
+  const navRef = useRef<HTMLDivElement>(null);
   const activeToolId = useMemo(() => {
     // extract tool id from pathname: /tools/<id>
     const parts = pathname.split("/");
@@ -106,19 +64,20 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav
-      className="flex flex-col"
+      ref={navRef}
+      className={`flex flex-col ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 transition-transform duration-300 ease-[var(--easing-smooth)]`}
       style={{
         position: "fixed",
         top: "12px",
         left: "12px",
         bottom: "12px",
-        width: "220px",
-        background: "rgba(10,10,12,0.65)",
-        backdropFilter: "blur(32px) saturate(150%)",
-        WebkitBackdropFilter: "blur(32px) saturate(150%)",
-        border: "1px solid rgba(255,255,255,0.06)",
+       width: "220px",
+        background: "var(--color-bg-elevated)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid var(--color-border)",
         borderRadius: "16px",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px var(--color-border) inset",
         zIndex: 50,
       }}
       aria-label="工具导航"
@@ -152,7 +111,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 scrollbar-thin">
+      <div
+        className="flex-1 overflow-y-auto px-3 py-4 space-y-6 sidebar-scrollbar"
+        style={{
+          scrollbarWidth: "thin",
+          scrollbarColor: "rgba(255,255,255,0.15) transparent",
+        }}
+      >
         {Object.entries(grouped).map(([cat, catTools]) => (
           <div key={cat}>
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-foreground-subtle)] px-3 mb-2">
@@ -164,6 +129,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   key={tool.id}
                   tool={tool}
                   active={tool.id === activeToolId}
+                  onClose={onClose}
                 />
               ))}
             </div>
@@ -176,23 +142,5 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <ThemeSwitcher />
       </div>
     </nav>
-  );
-}
-
-export function SidebarToggle({
-  open,
-  onClick,
-}: {
-  open: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="fixed top-3 left-3 z-50 size-9 flex items-center justify-center rounded-lg glass-low hover:bg-[var(--color-surface-hover)] transition-colors duration-200 lg:hidden"
-      aria-label={open ? "关闭导航" : "打开导航"}
-    >
-      {open ? <X className="size-4" /> : <Menu className="size-4" />}
-    </button>
   );
 }

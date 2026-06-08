@@ -197,9 +197,7 @@ export function useDrawing(options: UseDrawingOptions = {}) {
   }, [redraw]);
 
   const remoteClear = useCallback(() => {
-    strokesRef.current = [];
     remoteStrokesRef.current = [];
-    setStrokeCount(0);
     redraw();
   }, [redraw]);
 

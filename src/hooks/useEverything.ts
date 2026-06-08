@@ -18,6 +18,8 @@ interface UseEverythingReturn {
   drives: string[];
   drivesLoading: boolean;
   favorites: string[];
+  previewFile: EverythingFileResult | null;
+  isPreviewOpen: boolean;
   search: (query: string) => void;
   browse: (path: string) => void;
   setSort: (field: EverythingSortField) => void;
@@ -26,6 +28,8 @@ interface UseEverythingReturn {
   addFavorite: (path: string) => void;
   removeFavorite: (path: string) => void;
   refresh: () => void;
+  openPreview: (file: EverythingFileResult) => void;
+  closePreview: () => void;
 }
 
 const PAGE_SIZE = 50;
@@ -50,7 +54,7 @@ export function useEverything(): UseEverythingReturn {
   const [totalResults, setTotalResults] = useState(0);
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [sortField, setSortField] = useState<EverythingSortField>("name");
@@ -59,6 +63,8 @@ export function useEverything(): UseEverythingReturn {
   const [drives, setDrives] = useState<string[]>([]);
   const [drivesLoading, setDrivesLoading] = useState(true);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [previewFile, setPreviewFile] = useState<EverythingFileResult | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Load favorites from localStorage after hydration (SSR-safe)
   useEffect(() => {
@@ -70,6 +76,7 @@ export function useEverything(): UseEverythingReturn {
   const abortRef = useRef<AbortController | null>(null);
   const sortFieldRef = useRef<EverythingSortField>(sortField);
   const ascendingRef = useRef(ascending);
+  const previewTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     sortFieldRef.current = sortField;
@@ -215,6 +222,16 @@ export function useEverything(): UseEverythingReturn {
     });
   }, []);
 
+  const openPreview = useCallback((file: EverythingFileResult) => {
+    setPreviewFile(file);
+    setIsPreviewOpen(true);
+  }, []);
+
+  const closePreview = useCallback(() => {
+    setIsPreviewOpen(false);
+    previewTimeoutRef.current = setTimeout(() => setPreviewFile(null), 300);
+  }, []);
+
   const refresh = useCallback(() => {
     doFetch(searchQuery, currentPath, offset, sortField, ascending);
   }, [doFetch, searchQuery, currentPath, offset, sortField, ascending]);
@@ -229,6 +246,7 @@ export function useEverything(): UseEverythingReturn {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (abortRef.current) abortRef.current.abort();
+      clearTimeout(previewTimeoutRef.current);
     };
   }, []);
 
@@ -247,6 +265,8 @@ export function useEverything(): UseEverythingReturn {
     drives,
     drivesLoading,
     favorites,
+    previewFile,
+    isPreviewOpen,
     search,
     browse,
     setSort,
@@ -255,5 +275,7 @@ export function useEverything(): UseEverythingReturn {
     addFavorite,
     removeFavorite,
     refresh,
+    openPreview,
+    closePreview,
   };
 }

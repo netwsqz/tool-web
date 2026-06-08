@@ -32,7 +32,7 @@ export function MediaFileCard({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 text-sm group">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/5 text-sm group">
       <span className="text-base">{getIcon(file.filename)}</span>
       <span className="flex-1 truncate text-[var(--color-text-primary)]">
         {file.filename}
@@ -48,7 +48,7 @@ export function MediaFileCard({
             ${
               disabled
                 ? "text-[var(--color-text-secondary)] opacity-40 cursor-not-allowed"
-                : "text-[var(--color-text-secondary)] hover:text-red-400 hover:bg-white/10"
+                : "text-[var(--color-text-secondary)] hover:text-[var(--color-destructive)] hover:bg-black/10"
             }`}
         >
           ×

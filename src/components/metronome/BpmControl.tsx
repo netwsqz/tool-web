@@ -40,6 +40,7 @@ export function BpmControl({
             type="number"
             min={20}
             max={300}
+            aria-label="BPM"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onBlur={commitInput}
@@ -70,10 +71,11 @@ export function BpmControl({
         type="range"
         min={20}
         max={300}
+        aria-label="BPM"
         value={bpm}
         onChange={(e) => onBpmChange(parseInt(e.target.value, 10))}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer
-          bg-white/10
+          bg-black/10
           [&::-webkit-slider-thumb]:appearance-none
           [&::-webkit-slider-thumb]:w-4
           [&::-webkit-slider-thumb]:h-4

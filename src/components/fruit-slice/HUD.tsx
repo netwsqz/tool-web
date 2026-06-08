@@ -9,14 +9,14 @@ export function HUD({ state }: { state: FruitSliceState }) {
     <div className="absolute inset-x-0 top-0 pointer-events-none z-10 flex items-start justify-between px-4 py-3">
       {/* Score */}
       <div className="flex flex-col items-start">
-        <span className="text-xs text-[var(--color-foreground-muted)] font-medium uppercase tracking-wider">
+        <span className="text-xs text-white/70 font-medium uppercase tracking-wider drop-shadow-md">
           得分
         </span>
         <span className="text-2xl font-bold text-white tabular-nums drop-shadow-lg">
           {state.score}
         </span>
         {state.bestScore > 0 && (
-          <span className="text-[10px] text-[var(--color-foreground-subtle)] mt-0.5">
+          <span className="text-[10px] text-white/50 mt-0.5 drop-shadow-sm">
             最高 {state.bestScore}
           </span>
         )}
@@ -25,7 +25,7 @@ export function HUD({ state }: { state: FruitSliceState }) {
       {/* Combo */}
       {state.combo >= 2 && (
         <div className="flex flex-col items-center animate-fade-in">
-          <span className="text-lg font-bold text-orange-400 drop-shadow-lg">
+          <span className="text-lg font-bold text-[var(--color-warning)] drop-shadow-lg">
             {state.combo}x 连击!
           </span>
         </div>
@@ -36,10 +36,10 @@ export function HUD({ state }: { state: FruitSliceState }) {
         {Array.from({ length: 3 }, (_, i) => (
           <Heart
             key={i}
-            className={`size-5 transition-colors duration-200 ${
+            className={`size-5 transition-colors duration-200 drop-shadow-md ${
               i < state.lives
-                ? "text-red-500 fill-red-500 drop-shadow-md"
-                : "text-white/20"
+                ? "text-[var(--color-destructive)] fill-[var(--color-destructive)]"
+                : "text-white/30"
             }`}
           />
         ))}

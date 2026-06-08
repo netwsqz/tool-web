@@ -36,7 +36,7 @@ export function MarkdownEditor({
   return (
     <div className="relative h-full flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-black/5">
         <span className="text-xs text-[var(--color-text-secondary)]">
           Markdown
         </span>
@@ -49,7 +49,7 @@ export function MarkdownEditor({
           )}
           <button
             onClick={onSave}
-            className="text-xs px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[var(--color-text-primary)] transition-colors"
+            className="text-xs px-2 py-1 rounded-lg bg-black/10 hover:bg-black/20 text-[var(--color-text-primary)] transition-colors"
           >
             Ctrl+S
           </button>

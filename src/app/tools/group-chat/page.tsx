@@ -26,12 +26,13 @@ export default function GroupChatPage() {
     >
       {/* Error */}
       {chat.error && (
-        <div className="mb-4 px-4 py-2 rounded-xl bg-red-500/20 text-red-400 text-sm flex items-center justify-between">
+        <div className="mb-4 px-4 py-2 rounded-xl bg-[var(--color-destructive)]/20 text-[var(--color-destructive)] text-sm flex items-center justify-between">
           <span>{chat.error}</span>
           <button
             type="button"
             className="text-red-300 hover:text-red-200 ml-2"
             onClick={chat.clearError}
+            aria-label="关闭错误"
           >
             ✕
           </button>
@@ -68,7 +69,7 @@ export default function GroupChatPage() {
             </span>
             <button
               type="button"
-              className="text-xs text-red-400 hover:text-red-300"
+              className="text-xs text-[var(--color-destructive)] hover:text-[var(--color-destructive)]"
               onClick={chat.disconnect}
             >
               断开连接
@@ -104,8 +105,9 @@ export default function GroupChatPage() {
               <div className="flex items-center gap-3 min-w-0">
                 <button
                   type="button"
-                  className="lg:hidden text-sm text-[var(--color-foreground-muted)] hover:text-white"
+                  className="lg:hidden text-sm text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
                   onClick={chat.leaveRoom}
+                  aria-label="离开房间"
                 >
                   ←
                 </button>
@@ -117,14 +119,14 @@ export default function GroupChatPage() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="lg:hidden text-xs text-[var(--color-foreground-muted)] hover:text-white"
+                  className="lg:hidden text-xs text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
                   onClick={() => setShowMembers(!showMembers)}
                 >
                   {showMembers ? "关闭" : "成员"}
                 </button>
                 <button
                   type="button"
-                  className="text-xs text-red-400 hover:text-red-300"
+                  className="text-xs text-[var(--color-destructive)] hover:text-[var(--color-destructive)]"
                   onClick={chat.leaveRoom}
                 >
                   离开
@@ -154,7 +156,7 @@ export default function GroupChatPage() {
               <div className="lg:hidden flex justify-end mb-2">
                 <button
                   type="button"
-                  className="text-sm text-[var(--color-foreground-muted)] hover:text-white"
+                  className="text-sm text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]"
                   onClick={() => setShowMembers(false)}
                 >
                   关闭 ✕

@@ -57,7 +57,7 @@ export function FileSidebar({
         />
       </div>
 
-      <hr className="border-white/5 mx-3" />
+      <hr className="border-black/5 mx-3" />
 
       {/* File tree */}
       <div className="flex-1 overflow-y-auto p-2">
@@ -70,7 +70,7 @@ export function FileSidebar({
       </div>
 
       {/* New file */}
-      <div className="p-3 border-t border-white/5">
+      <div className="p-3 border-t border-black/5">
         {showNewInput ? (
           <div className="flex gap-2">
             <input
@@ -82,10 +82,11 @@ export function FileSidebar({
                 if (e.key === "Escape") handleCancel();
               }}
               placeholder="新笔记名"
+              aria-label="新笔记名称"
               autoFocus
-              className="flex-1 px-2.5 py-1.5 text-sm bg-white/5 rounded-xl
+              className="flex-1 px-2.5 py-1.5 text-sm bg-black/5 rounded-xl
                 text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)]
-                outline-none border border-white/5 focus:border-[var(--color-accent)]/40
+                outline-none border border-black/5 focus:border-[var(--color-accent)]/40
                 transition-colors"
             />
             <button
@@ -101,7 +102,7 @@ export function FileSidebar({
             onClick={() => setShowNewInput(true)}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm
               text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]
-              hover:bg-white/5 rounded-xl transition-all"
+              hover:bg-black/5 rounded-xl transition-all"
           >
             <span>+</span>
             <span>新建笔记</span>

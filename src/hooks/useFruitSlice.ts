@@ -8,12 +8,13 @@ import {
 } from "@/lib/fruit-slice/game-engine";
 import { addSlashPoint, updateTrail } from "@/lib/fruit-slice/particles";
 import { renderFrame } from "@/lib/fruit-slice/canvas-renderer";
-import { playSlash, playCombo, playBomb, playMiss, playGameOver, vibrate } from "@/lib/fruit-slice/sound-engine";
+import { playSlash, playCombo, playBomb, playMiss, playGameOver, vibrate, suspendAudio } from "@/lib/fruit-slice/sound-engine";
 
 export function useFruitSlice() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<EngineState | null>(null);
   const rafRef = useRef<number>(0);
+  const prevSnapshotRef = useRef<FruitSliceState | null>(null);
   const [ui, setUi] = useState<FruitSliceState>({
     phase: "idle",
     score: 0,
@@ -80,7 +81,14 @@ export function useFruitSlice() {
       ctx.restore();
     }
 
-    setUi(snapshot(engine));
+    const next = snapshot(engine);
+    const prev = prevSnapshotRef.current;
+    if (!prev || next.score !== prev.score || next.lives !== prev.lives ||
+        next.combo !== prev.combo || next.phase !== prev.phase ||
+        next.maxCombo !== prev.maxCombo) {
+      prevSnapshotRef.current = next;
+      setUi(next);
+    }
     rafRef.current = requestAnimationFrame(gameLoop);
   }, []);
 
@@ -88,6 +96,7 @@ export function useFruitSlice() {
   const start = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    cancelAnimationFrame(rafRef.current);
     const rect = canvas.getBoundingClientRect();
     const engine = createInitialState(rect.width, rect.height);
     engine.phase = "playing";
@@ -95,9 +104,12 @@ export function useFruitSlice() {
     rafRef.current = requestAnimationFrame(gameLoop);
   }, [gameLoop]);
 
-  // ── Stop loop on unmount ──
+  // ── Stop loop and cleanup audio on unmount ──
   useEffect(() => {
-    return () => cancelAnimationFrame(rafRef.current);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      suspendAudio();
+    };
   }, []);
 
   // ── Idle animation when not playing ──

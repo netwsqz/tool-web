@@ -81,7 +81,7 @@ export function SubtitleMerge({
               ${
                 mode === "burn"
                   ? "bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
-                  : "bg-white/5 border border-white/5 hover:bg-white/8"
+                  : "bg-black/5 border border-black/5 hover:bg-black/8"
               }`}
           >
             <input
@@ -105,7 +105,7 @@ export function SubtitleMerge({
               ${
                 mode === "embed"
                   ? "bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
-                  : "bg-white/5 border border-white/5 hover:bg-white/8"
+                  : "bg-black/5 border border-black/5 hover:bg-black/8"
               }`}
           >
             <input
@@ -133,7 +133,7 @@ export function SubtitleMerge({
           ${
             canStart
               ? "bg-[var(--color-accent)] text-white hover:opacity-90"
-              : "bg-white/5 text-[var(--color-text-secondary)] cursor-not-allowed"
+              : "bg-black/5 text-[var(--color-text-secondary)] cursor-not-allowed"
           }`}
       >
         {disabled

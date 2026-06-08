@@ -57,7 +57,7 @@ export function FormatSelector({
                 className={`p-3 rounded-xl border text-left transition-all ${
                   selectedId === fmt.formatId
                     ? "border-[var(--color-accent)]/50 bg-[var(--color-accent)]/10"
-                    : "border-white/10 bg-white/5 hover:bg-white/8"
+                    : "border-black/10 bg-black/5 hover:bg-black/8"
                 } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 <div className="text-sm font-semibold text-[var(--color-text-primary)]">
@@ -86,9 +86,9 @@ export function FormatSelector({
       {audioFormats.length > 0 && (
         <>
           <div className="flex items-center gap-3 text-xs text-[var(--color-text-secondary)]">
-            <span className="h-px flex-1 bg-white/10" />
+            <span className="h-px flex-1 bg-black/10" />
             <span>音频</span>
-            <span className="h-px flex-1 bg-white/10" />
+            <span className="h-px flex-1 bg-black/10" />
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {audioFormats.map((fmt) => (
@@ -99,7 +99,7 @@ export function FormatSelector({
                 className={`p-3 rounded-xl border text-left transition-all ${
                   selectedId === fmt.formatId
                     ? "border-[var(--color-accent)]/50 bg-[var(--color-accent)]/10"
-                    : "border-white/10 bg-white/5 hover:bg-white/8"
+                    : "border-black/10 bg-black/5 hover:bg-black/8"
                 } disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 <div className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -124,7 +124,7 @@ export function FormatSelector({
       >
         {starting ? (
           <>
-            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            <span className="w-4 h-4 rounded-full border-2 border-black/30 border-t-white animate-spin" />
             准备中…
           </>
         ) : selectedId ? (

@@ -30,7 +30,7 @@ export function PlayerList({
           <div
             key={p.id}
             className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm
-              ${isDrawer ? "bg-yellow-500/10" : "bg-white/5"}`}
+              ${isDrawer ? "bg-yellow-500/10" : "bg-black/5"}`}
           >
             <div className="flex items-center gap-2 min-w-0">
               <span className="truncate">

@@ -120,7 +120,7 @@ export function VideoProcessing({
               ${
                 mode === m.id
                   ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30"
-                  : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/5 border border-transparent"
+                  : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-black/5 border border-transparent"
               }`}
           >
             {m.label}
@@ -154,8 +154,9 @@ export function VideoProcessing({
             step={0.05}
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
+            aria-label="音量"
             className="w-full h-1.5 rounded-full appearance-none cursor-pointer
-              bg-white/10
+              bg-black/10
               [&::-webkit-slider-thumb]:appearance-none
               [&::-webkit-slider-thumb]:w-4
               [&::-webkit-slider-thumb]:h-4
@@ -188,7 +189,7 @@ export function VideoProcessing({
                 min={0}
                 value={field.value}
                 onChange={(e) => field.set(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/5
+                className="w-full px-3 py-2 rounded-xl bg-black/5 border border-black/5
                   text-sm text-[var(--color-text-primary)] outline-none
                   focus:border-[var(--color-accent)]/40 transition-colors
                   [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none
@@ -203,7 +204,7 @@ export function VideoProcessing({
       )}
 
       {mode === "transcode" && video && (
-        <div className="text-xs text-[var(--color-text-secondary)] bg-white/5 rounded-2xl p-4">
+        <div className="text-xs text-[var(--color-text-secondary)] bg-black/5 rounded-2xl p-4">
           将视频转码为 H.264 视频编码 + AAC 音频编码的 MP4 文件。
           适合兼容性最好的播放格式。
         </div>
@@ -223,7 +224,7 @@ export function VideoProcessing({
                   ${
                     audioFormat === fmt
                       ? "bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
-                      : "bg-white/5 border border-white/5 hover:bg-white/8"
+                      : "bg-black/5 border border-black/5 hover:bg-black/8"
                   }`}
               >
                 <input
@@ -250,7 +251,7 @@ export function VideoProcessing({
           ${
             canStart
               ? "bg-[var(--color-accent)] text-white hover:opacity-90"
-              : "bg-white/5 text-[var(--color-text-secondary)] cursor-not-allowed"
+              : "bg-black/5 text-[var(--color-text-secondary)] cursor-not-allowed"
           }`}
       >
         {disabled ? "处理中…" : !video ? "请选择视频文件" : "开始处理"}

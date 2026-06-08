@@ -26,8 +26,9 @@ export function GuessInput({ onGuess, disabled = false }: GuessInputProps) {
         onChange={(e) => setText(e.target.value)}
         disabled={disabled}
         placeholder="输入你的猜测..."
-        className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10
-          text-sm text-white placeholder-[var(--color-text-secondary)]
+        aria-label="输入猜测"
+        className="flex-1 px-3 py-2 rounded-xl bg-black/5 border border-black/10
+          text-sm text-[var(--color-foreground)] placeholder-[var(--color-text-secondary)]
           focus:outline-none focus:border-[var(--color-accent)] transition-colors
           disabled:opacity-40 disabled:cursor-not-allowed"
       />

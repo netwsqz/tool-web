@@ -48,6 +48,8 @@ export function DrawingCanvas({
     >
       <canvas
         ref={canvasRef}
+        aria-label="画板"
+        role="img"
         className={`block w-full h-full ${
           readonly ? "" : "cursor-crosshair touch-none"
         }`}

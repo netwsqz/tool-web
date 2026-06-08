@@ -1,23 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Upload } from "lucide-react";
 import { ToolLayout } from "@/components/ui/ToolLayout";
 import { FileDropZone } from "@/components/file-transfer/FileDropZone";
 import { FileList } from "@/components/file-transfer/FileList";
-import type { FileInfo } from "@/lib/storage";
+import { FilePreviewDrawer } from "@/components/file-transfer/FilePreviewDrawer";
+import { useFileTransfer } from "@/hooks/useFileTransfer";
 
 export default function FileTransferPage() {
-  const [files, setFiles] = useState<FileInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchFiles = useCallback(async () => {
-    const res = await fetch("/api/files");
-    if (res.ok) {
-      setFiles(await res.json());
-    }
-    setLoading(false);
-  }, []);
+  const {
+    files,
+    loading,
+    fetchFiles,
+    previewFile,
+    isPreviewOpen,
+    openPreview,
+    closePreview,
+  } = useFileTransfer();
 
   useEffect(() => {
     fetchFiles();
@@ -33,7 +33,12 @@ export default function FileTransferPage() {
       <div className="mb-8">
         <FileDropZone onUploaded={fetchFiles} />
       </div>
-      <FileList files={files} loading={loading} />
+      <FileList files={files} loading={loading} onPreview={openPreview} />
+      <FilePreviewDrawer
+        file={previewFile}
+        isOpen={isPreviewOpen}
+        onClose={closePreview}
+      />
     </ToolLayout>
   );
 }

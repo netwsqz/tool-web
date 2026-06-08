@@ -21,6 +21,8 @@ export function useObsidian() {
   const [isSearching, setIsSearching] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  // 防止快速切换文件时的竞态条件
+  const loadGenerationRef = { current: 0 };
 
   const isDirty = content !== originalContent && activeFilePath !== null;
   const activeFile = files.find((f) => f.path === activeFilePath) ?? null;
@@ -42,20 +44,28 @@ export function useObsidian() {
   // --- Load single file ---
 
   const loadFile = useCallback(async (path: string) => {
+    const gen = ++loadGenerationRef.current;
     setIsLoadingContent(true);
     setError(null);
     try {
       const res = await fetch(`/api/obsidian/files?path=${encodeURIComponent(path)}`);
       if (!res.ok) throw new Error("读取失败");
       const data = await res.json();
-      setContentState(data.content);
-      setOriginalContent(data.content);
+      // 只有当前 generation 最新时才更新状态，防止竞态
+      if (loadGenerationRef.current === gen) {
+        setContentState(data.content);
+        setOriginalContent(data.content);
+      }
     } catch {
-      setError("无法读取文件");
-      setContentState("");
-      setOriginalContent("");
+      if (loadGenerationRef.current === gen) {
+        setError("无法读取文件");
+        setContentState("");
+        setOriginalContent("");
+      }
     } finally {
-      setIsLoadingContent(false);
+      if (loadGenerationRef.current === gen) {
+        setIsLoadingContent(false);
+      }
     }
   }, []);
 
